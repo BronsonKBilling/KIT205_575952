@@ -91,3 +91,21 @@ void destroy_list(List* self) {
 	}
 	self->head = NULL;
 }
+
+// Function to test the list's functions
+void list_test() {
+	List test_list = new_list();
+
+	printf("Testing insert_at_front... \n");
+
+	insert_at_front(&test_list, 5);
+	insert_at_front(&test_list, 3);
+	insert_at_front(&test_list, 7);
+	insert_at_front(&test_list, 2);
+	insert_at_front(&test_list, 0);
+
+	printf("Expected: 0, 2, 7, 3, 5\n");
+	printf("Result: ");
+
+	print_list(&test_list);
+}

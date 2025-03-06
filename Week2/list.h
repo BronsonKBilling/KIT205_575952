@@ -29,3 +29,6 @@ void delete_list(List* self, int data);
 
 // Function to free the memory allocated to a list and all its nodes.
 void destroy_list(List* self);
+
+// Function to test the list's functions
+void list_test();
