@@ -32,3 +32,5 @@ void destroy_list(List* self);
 
 // Function to test the list's functions
 void list_test();
+
+void ad_hoc_test();

@@ -109,3 +109,20 @@ void list_test() {
 
 	print_list(&test_list);
 }
+
+// Tests inserting in order into a List, and destroying the list
+void ad_hoc_test() {
+	List test_list = new_list();
+	int int_to_add;
+
+	scanf_s("%d", &int_to_add);
+	
+	while (int_to_add != 0) {
+		insert_in_order(&test_list, int_to_add);
+		scanf_s("%d", &int_to_add);
+	}
+
+	print_list(&test_list);
+
+	destroy_list(&test_list);
+}
