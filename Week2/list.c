@@ -110,19 +110,75 @@ void list_test() {
 	print_list(&test_list);
 }
 
-// Tests inserting in order into a List, and destroying the list
-void ad_hoc_test() {
-	List test_list = new_list();
+// Tests the 'insert_at_front()' function
+void option_insert(List* self) {
 	int int_to_add;
 
+	printf("Please enter a number to add to the list: ");
 	scanf_s("%d", &int_to_add);
-	
-	while (int_to_add != 0) {
-		insert_in_order(&test_list, int_to_add);
-		scanf_s("%d", &int_to_add);
+
+	insert_at_front(self, int_to_add);
+}
+
+// Tests the 'delete_list()' function
+void option_delete(List* self) {
+	int int_to_delete;
+
+	printf("Please enter a number to delete from the list: ");
+	scanf_s("%d", &int_to_delete);
+
+	delete_list(self, int_to_delete);
+}
+
+// Tests the 'print_list()' function
+void option_print(List* self) {
+	print_list(self);
+}
+
+// Tests inserting in order into a List, and destroying the list
+//void ad_hoc_test() {
+//	List test_list = new_list();
+//	int int_to_add;
+//
+//	scanf_s("%d", &int_to_add);
+//
+//	while (int_to_add != 0) {
+//		insert_in_order(&test_list, int_to_add);
+//		scanf_s("%d", &int_to_add);
+//	}
+//
+//	print_list(&test_list);
+//
+//	destroy_list(&test_list);
+//}
+
+// Tests inserting in order into a List, and destroying the list
+void ad_hoc_test() {
+	List my_list = new_list();
+	int quit = 0;
+
+	while (!quit) {
+		int option;
+
+		printf("Please select a function to test:\n1. Insert\n2. Delete\n3. Print\n0. Quit\n");
+		scanf_s("%d", &option);
+
+		switch (option)
+		{
+			case 0:
+				quit = 1;
+				break;
+			case 1:
+				option_insert(&my_list);
+				break;
+			case 2:
+				option_delete(&my_list);
+				break;
+			case 3:
+				option_print(&my_list);
+				break;
+		}
 	}
 
-	print_list(&test_list);
-
-	destroy_list(&test_list);
+	destroy_list(&my_list);
 }
