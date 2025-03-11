@@ -92,6 +92,78 @@ void destroy_list(List* self) {
 	self->head = NULL;
 }
 
+// Reverses the order of a list. Algorithm based off of: https://www.geeksforgeeks.org/reverse-a-linked-list/
+void reverse(List* self) {
+	ListNodePtr prev = NULL;
+	ListNodePtr current = self->head;
+	ListNodePtr next = NULL;
+
+	while (current != NULL) {
+		next = current->next;
+		current->next = prev;
+		prev = current;
+		current = next;
+	}
+
+	self->head = prev;
+}
+
+// Merges two ordered lists. Modifies the first list to become the merged list (the hard way, not working)
+//void merge(List* self, List* list_to_merge) {
+//	List merged_list = new_list();
+//	ListNodePtr current_merged = merged_list.head;
+//	ListNodePtr current_self = self->head;
+//	ListNodePtr current_to_merge = list_to_merge->head;
+//	ListNodePtr new_node;
+//	int data_to_add;
+//
+//	while (current_self != NULL && current_to_merge != NULL) {
+//		// Find which list to add from and advance the list
+//		if (current_self == NULL || current_self->data > current_to_merge->data)
+//		{
+//			data_to_add = current_to_merge->data;
+//			current_to_merge = current_to_merge->next;
+//		}
+//		else {
+//			data_to_add = current_self->data;
+//			current_self = current_self->next;
+//		}
+//		printf("meow");
+//		// Add to the new list
+//		new_node = malloc(sizeof * new_node);
+//		new_node->data = data_to_add;
+//
+//		if (merged_list.head == NULL) {
+//			merged_list.head = new_node;
+//			current_merged = merged_list.head;
+//		}
+//		else {
+//			current_merged->next = new_node;
+//		}
+//	}
+//	print_list(&merged_list);
+//	self->head = merged_list.head;
+//}
+
+// Merges two ordered lists. Modifies the first list to become the merged list
+void merge(List* self, List* list_to_merge) {
+	List merged_list = new_list();
+	ListNodePtr current_self = self->head;
+	ListNodePtr current_to_merge = list_to_merge->head;
+	
+	while (current_self != NULL) {
+		insert_in_order(&merged_list, current_self->data);
+		current_self = current_self->next;
+	}
+
+	while (current_to_merge != NULL) {
+		insert_in_order(&merged_list, current_to_merge->data);
+		current_to_merge = current_to_merge->next;
+	}
+
+	self->head = merged_list.head;
+}
+
 // Function to test the list's functions
 void list_test() {
 	List test_list = new_list();
@@ -135,6 +207,22 @@ void option_print(List* self) {
 	print_list(self);
 }
 
+void option_reverse(List* self) {
+	reverse(self);
+}
+
+void option_merge(List* self) {
+	// code to test the merge function
+	List test_list = new_list();
+	insert_in_order(&test_list, 1);
+	insert_in_order(&test_list, 4);
+	insert_in_order(&test_list, 9);
+	insert_in_order(&test_list, 2);
+	insert_in_order(&test_list, 3);
+
+	merge(self, &test_list);
+}
+
 // Tests inserting in order into a List, and destroying the list
 //void ad_hoc_test() {
 //	List test_list = new_list();
@@ -160,7 +248,7 @@ void ad_hoc_test() {
 	while (!quit) {
 		int option;
 
-		printf("Please select a function to test:\n1. Insert\n2. Delete\n3. Print\n0. Quit\n");
+		printf("Please select a function to test:\n1. Insert\n2. Delete\n3. Print\n4. Reverse\n5. Merge\n0. Quit\n");
 		scanf_s("%d", &option);
 
 		switch (option)
@@ -177,6 +265,11 @@ void ad_hoc_test() {
 			case 3:
 				option_print(&my_list);
 				break;
+			case 4:
+				option_reverse(&my_list);
+				break;
+			case 5:
+				option_merge(&my_list);
 		}
 	}
 
