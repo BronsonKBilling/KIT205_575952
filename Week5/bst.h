@@ -70,6 +70,29 @@ void print_in_order_bst(BST* self);
 void destroy_bst(BST* self);
 
 /**
+ * @brief Prints the BST in pre order
+ * 
+ * @param self Pointer to the binary search tree to print in pre order
+*/
+void print_pre_order_bst(BST* self);
+
+/**
+ * @brief Prints the BST in post order
+ *
+ * @param self Pointer to the binary search tree to print in post order
+*/
+void print_post_order_bst(BST* self);
+
+/**
+ * @brief Gets and returns the height of a BST
+ *
+ * @param self Pointer to the binary search tree to get the height of
+ *
+ * @return int representing the height of the BST
+ */
+int get_bst_height(BST* self);
+
+/**
  * @brief Tests the binary search tree
  *
 */

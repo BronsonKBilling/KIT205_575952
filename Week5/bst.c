@@ -129,6 +129,79 @@ void destroy_bst(BST* self) {
 	self->root = NULL;
 }
 
+// Recursive funciton to print in pre order
+void print_pre_order_bst_node(BSTNodePtr self) {
+	if (self == NULL) {
+		printf("_");
+	}
+	else {
+		printf("(");
+		printf(" %d ", self->data_item);
+		print_pre_order_bst_node(self->left);
+		print_pre_order_bst_node(self->right);
+		printf(")");
+	}
+}
+
+// Recursive funciton to print in post order
+void print_post_order_bst_node(BSTNodePtr self) {
+	if (self == NULL) {
+		printf("_");
+	}
+	else {
+		printf("(");
+		print_post_order_bst_node(self->left);
+		print_post_order_bst_node(self->right);
+		printf(" %d ", self->data_item);	
+		printf(")");
+	}
+}
+
+// Print tree in pre order
+void print_pre_order_bst(BST* self) {
+	print_pre_order_bst_node(self->root);
+}
+
+// Print tree in post order
+void print_post_order_bst(BST* self) {
+	print_post_order_bst_node(self->root);
+}
+
+// Recursively gets height of BST
+int get_bst_node_height(BSTNodePtr self) {
+	int left_height;
+	int right_height;
+	int height;
+
+	if (self == NULL) {
+		height = 0;
+	}
+	else {
+		left_height = get_bst_node_height(self->left);
+		right_height = get_bst_node_height(self->right);
+
+		// The case of the right height and the left height being the same, but not equalling 0 is dealt with appropriately
+		// in the else statement
+		if (left_height == 0 && right_height == 0)
+		{
+			height = 1;
+		}
+		else if (left_height > right_height) {
+			height = left_height + 1;
+		}
+		else {
+			height = right_height + 1;
+		}
+	}
+
+	return height;
+}
+
+// Get height of BST
+int get_bst_height(BST* self) {
+	return get_bst_node_height(self->root);
+}
+
 void bst_adhoc_test() {
 	BST tree = new_bst();
 	int quit = 0;
@@ -143,6 +216,11 @@ void bst_adhoc_test() {
 			quit = 1;
 		}
 	}
-	print_in_order_bst(&tree);
+	print_post_order_bst(&tree);
+	printf("\n");
+	printf("%d", get_bst_height(&tree));
 	printf("\n");
 }
+
+// NEED TEST FUNCTION FOR PRE AND POST ORDER
+
