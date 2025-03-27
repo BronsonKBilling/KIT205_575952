@@ -146,7 +146,7 @@ void reverse(List* self) {
 //}
 
 // Merges two ordered lists. Modifies the first list to become the merged list
-void merge(List* self, List* list_to_merge) {
+List merge(List* self, List* list_to_merge) {
 	List merged_list = new_list();
 	ListNodePtr current_self = self->head;
 	ListNodePtr current_to_merge = list_to_merge->head;
@@ -161,25 +161,7 @@ void merge(List* self, List* list_to_merge) {
 		current_to_merge = current_to_merge->next;
 	}
 
-	self->head = merged_list.head;
-}
-
-// Function to test the list's functions
-void list_test() {
-	List test_list = new_list();
-
-	printf("Testing insert_at_front... \n");
-
-	insert_at_front(&test_list, 5);
-	insert_at_front(&test_list, 3);
-	insert_at_front(&test_list, 7);
-	insert_at_front(&test_list, 2);
-	insert_at_front(&test_list, 0);
-
-	printf("Expected: 0, 2, 7, 3, 5\n");
-	printf("Result: ");
-
-	print_list(&test_list);
+	return merged_list;
 }
 
 // Tests the 'insert_at_front()' function
@@ -214,17 +196,37 @@ void option_reverse(List* self) {
 void option_merge(List* self) {
 	// code to test the merge function
 	List test_list = new_list();
+	List merged_list;
 	insert_in_order(&test_list, 1);
 	insert_in_order(&test_list, 4);
 	insert_in_order(&test_list, 9);
 	insert_in_order(&test_list, 2);
 	insert_in_order(&test_list, 3);
 
-	merge(self, &test_list);
+	merged_list = merge(self, &test_list);
+	print_list(&merged_list);
+}
+
+// Function to test the list's functions
+void list_test() {
+	List test_list = new_list();
+
+	printf("Testing insert_at_front... \n");
+
+	insert_at_front(&test_list, 5);
+	insert_at_front(&test_list, 3);
+	insert_at_front(&test_list, 7);
+	insert_at_front(&test_list, 2);
+	insert_at_front(&test_list, 0);
+
+	printf("Expected: 0, 2, 7, 3, 5\n");
+	printf("Result: ");
+
+	print_list(&test_list);
 }
 
 // Tests inserting in order into a List, and destroying the list
-//void ad_hoc_test() {
+//void list_adhoc_test() {
 //	List test_list = new_list();
 //	int int_to_add;
 //
@@ -241,7 +243,7 @@ void option_merge(List* self) {
 //}
 
 // Tests inserting in order into a List, and destroying the list
-void ad_hoc_test() {
+void list_adhoc_test() {
 	List my_list = new_list();
 	int quit = 0;
 
@@ -275,3 +277,81 @@ void ad_hoc_test() {
 
 	destroy_list(&my_list);
 }
+
+// Tests the reverse function
+void reverse_test() {
+	List test_list = new_list();
+
+	// Test reverse when list has no elements
+	// This should print nothing, not crash the program, and not stop the following tests from working
+	reverse(&test_list);
+	print_list(&test_list);
+	
+	insert_at_front(&test_list, 50);
+
+	// Test reverse when list only has 1 element. Expected output is just 50
+	reverse(&test_list);
+	print_list(&test_list);
+
+	insert_at_front(&test_list, 20);
+	insert_at_front(&test_list, 10);
+	insert_at_front(&test_list, 4);
+	insert_at_front(&test_list, 8);
+
+	// Test reverse when list has multiple items. Expected output is: 50, 20, 10, 4, 8
+	reverse(&test_list);
+	print_list(&test_list);
+}
+
+// Tests the merge function
+void merge_test() {
+	List first_list = new_list();
+	List second_list = new_list();
+	List merged_list;
+
+	// 1. Test merge when both lists have no elements
+	printf("\nTEST 1\n");
+	merged_list = merge(&first_list, &second_list);
+
+	printf("Expected output: \n");
+	printf("Actual output: ");
+	print_list(&merged_list);
+
+	// Populate list
+	insert_at_front(&first_list, 20);
+
+	// 2. Test merge when only one list has an element. Expected output: 20
+	printf("\nTEST 2\n");
+	merged_list = merge(&first_list, &second_list);
+
+	printf("Expected output: 20\n");
+	printf("Actual output: ");
+	print_list(&merged_list);
+
+	// Populate list
+	insert_at_front(&second_list, 20);
+
+	// 3. Tests when lists have the same elements.
+	printf("\nTEST 3\n");
+	merged_list = merge(&first_list, &second_list);
+
+	printf("Expected output: 20, 20\n");
+	printf("Actual output: ");
+	print_list(&merged_list);
+
+	// Populate lists
+	insert_at_front(&first_list, 12);
+	insert_at_front(&first_list, 3);
+	insert_at_front(&second_list, 9);
+	insert_at_front(&second_list, 1);
+
+	// 4. Tests behaviour when lists have many elements. 
+	printf("\nTEST 4\n");
+	merged_list = merge(&first_list, &second_list);
+
+	printf("Expected output: 1, 3, 9, 12, 20, 20\n");
+	printf("Actual output: ");
+	print_list(&merged_list);
+
+}
+

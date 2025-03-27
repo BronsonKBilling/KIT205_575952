@@ -33,4 +33,11 @@ void destroy_list(List* self);
 // Function to test the list's functions
 void list_test();
 
-void ad_hoc_test();
+// Function to test list functions with a menu
+void list_adhoc_test();
+
+// Function to test the reverse list function
+void reverse_test();
+
+// Function to test the merge lists funciton
+void merge_test();

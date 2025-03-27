@@ -2,6 +2,8 @@
 
 int main() {
 	//list_test();
-	ad_hoc_test();
+	//list_adhoc_test();
+	//reverse_test();
+	merge_test();
 	return 0;
 }
