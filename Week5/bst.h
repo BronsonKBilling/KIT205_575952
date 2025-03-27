@@ -97,3 +97,9 @@ int get_bst_height(BST* self);
  *
 */
 void bst_adhoc_test();
+
+/**
+ * @brief Tests all functions and execution paths
+ *
+*/
+void bst_test();
