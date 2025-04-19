@@ -128,6 +128,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="linked_list.c" />
+    <ClCompile Include="record.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="linked_list.h" />
+    <ClInclude Include="record.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
