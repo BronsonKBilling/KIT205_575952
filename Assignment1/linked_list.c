@@ -15,16 +15,22 @@ List create_list() {
 
 // Prints every element of a list in order
 void print_list(List* self) {
+	ListNodePtr current = self->head; // The current node being iterated over
 
+	while (current != NULL) {
+		print_record(&current->data);
+		current = current->next;
+		printf("\n");
+	}
 }
 
 // Prints every record of a list that is associated with the given record
-void print_one_to_many(List self, Record* match) {
+void print_one_to_many(List* self, Record* match) {
 
 }
 
 // Inserts a new record into the list
-void insert(List self, Record* data) {
+void insert(List* self, Record* data) {
 
 }
 

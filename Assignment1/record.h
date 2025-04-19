@@ -2,14 +2,16 @@
 #pragma once
 
 typedef enum {
-	STRING,
-	LIST,
-	TREE
+	DT_STRING,
+	DT_LIST,
+	DT_TREE,
+	DT_UNSET
 } DataType;
 
 typedef enum {
-	STRING,
-	INT
+	IT_STRING,
+	IT_INT,
+	IT_UNSET
 } IdentifierType;
 
 typedef struct record {
@@ -21,8 +23,8 @@ typedef struct record {
 
 Record create_record();
 
-int compare_records(Record* self, Record other);
+int compare_records(Record* self, Record* other);
 
 void print_record(Record* self);
 
-void test_record(Record* self);
+void test_record();

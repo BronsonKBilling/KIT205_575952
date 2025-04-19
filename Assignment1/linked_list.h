@@ -26,4 +26,4 @@ void print_one_to_many(List* self, Record* match);
 
 void insert(List* self, Record* data);
 
-void test_list(List* self);
+void test_list();
