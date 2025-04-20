@@ -1,4 +1,5 @@
 #include "record.h"
+#include "linked_list.h"
 // Problem domain: Storing UFC fighter and event records. Events could include venue, date, gate, box office,
 // main event, etc. Fighter records could include name, weight classes, championships, age, ranking, and more.
 // 
@@ -31,6 +32,7 @@ limiting insertions due to its fixed size. A
 */
 
 int main() {
+	test_list();
 	test_record();
 	return 0;
 }

@@ -27,19 +27,19 @@ int compare_records(Record* self, Record* other) {
 	if (self->identifier_type != other->identifier_type)
 	{
 		printf("ER1: ERROR! You are comparing two identifiers with different data types.");
-		return;	// This is temporary and is only here to simulate exiting the program during testing
+		return 1;	// This is temporary and is only here to simulate exiting the program during testing
 		// exit(1);
 	}  
 	// Only checks one identifier type as both identifiers must be the same, or else the program would have already exited
 	else if (self->identifier_type == IT_UNSET) {
 		printf("ER2: ERROR! The identifier type is unset.");
-		return;	// This is temporary and is only here to simulate exiting the program during testing
+		return 2;	// This is temporary and is only here to simulate exiting the program during testing
 		// exit(2);
 	}	
 
 	if (self->identifier == NULL || other->identifier == NULL) {
 		printf("ER3: ERROR! One or both identifiers is unset.");
-		return;	// This is temporary and is only here to simulate exiting the program during testing
+		return 3;	// This is temporary and is only here to simulate exiting the program during testing
 	}
 
 	if (self->identifier_type == IT_STRING) {

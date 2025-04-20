@@ -8,9 +8,9 @@
 typedef char* String;
 
 typedef struct listNode {
-	Record data; 
+	Record* data; 
 	struct listNode* next;
-	struct listnode* prev;
+	struct listNode* prev;
 } *ListNodePtr;
 
 typedef struct list {
@@ -21,8 +21,6 @@ typedef struct list {
 List create_list();
 
 void print_list(List* self);
-
-void print_one_to_many(List* self, Record* match);
 
 void insert(List* self, Record* data);
 
