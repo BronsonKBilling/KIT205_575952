@@ -20,8 +20,8 @@ typedef struct list {
 
 List create_list();
 
-void print_list(List* self);
-
 void insert(List* self, Record* data);
+
+void print_list(List* self);
 
 void test_list();

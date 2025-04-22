@@ -32,7 +32,7 @@ limiting insertions due to its fixed size. A
 */
 
 int main() {
+	//test_record();
 	test_list();
-	test_record();
 	return 0;
 }
