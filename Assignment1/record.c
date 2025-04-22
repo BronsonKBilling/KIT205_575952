@@ -54,10 +54,10 @@ int compare_records(Record* self, Record* other) {
 	}
 	// Only other identifier type is IT_INT as previous checks make progressing with IT_UNSET impossible
 	else {
-		if (self->identifier > other->identifier) {
+		if (*(int*)self->identifier > *(int*)other->identifier) {
 			comparison_result = 1;
 		}
-		else if (self->identifier < other->identifier) {
+		else if (*(int*)self->identifier < *(int*)other->identifier) {
 			comparison_result = -1;
 		}
 		else {
@@ -87,19 +87,102 @@ void print_record(Record* self) {
 
 	if (self->identifier_type == IT_STRING) {
 		format = "%s";
+		printf("%s", self->identifier);
 	} 
 	else {
 		format = "%d";
+		printf("%d", *(int*)self->identifier);
 	}
 
-	printf(format, self->identifier);
+	
+}
+
+// Clones a record and returns a pointer to the clone. This function assumes that records with a set identifier type also
+// have a valid identifier of the same type. 
+Record* clone_record(Record* self) {
+	Record* clone = malloc(sizeof(Record));
+	*clone = create_record();
+
+	// Directly assigning is fine here as these fields aren't pointers, so the compiler will make a copy
+	clone->identifier_type = self->identifier_type;
+	clone->data_type = self->data_type;
+
+	if (self->identifier != NULL) {
+		if (self->identifier_type == IT_INT) {
+			clone->identifier = malloc(sizeof(int));
+			*(int*)clone->identifier = *(int*)self->identifier;
+		} 
+		else { // IT_STRING is the only other option as IT_UNSET cannot be the type if the identifier is NULL
+			// malloc is necessary to avoid making a shallow copy
+			clone->identifier = malloc(strlen(self->identifier) + 1);
+			strcpy_s(clone->identifier, strlen(self->identifier) + 1, self->identifier);
+		} 
+	} 
+
+	if (self->data != NULL) {
+		// if data_type == DT_LIST copy_list() (not implemented yet)
+		// else if data_type == DT_TREE copy_tree() (not implemented yet)
+		// else throw err
+	}
+
+	return clone;
+
+}
+
+void destroy_record(Record* self) {
+	if (self->identifier != NULL && self->identifier_type != IT_STRING) {
+		free(self->identifier);
+	}
+	
+	// if (record->data_type == DT_TREE) {destroy_tree()} else if (record->data_type == DT_LIST) {destroy_list()}
+
+	free(self);
+}
+
+// Changes the identifier of a record that has an identifier type of IT_INT. This is necessary as 'identifier' is of
+// type 'void*', meaning that directly assigning an integer value to it will make 'identifier' equal the memory address that
+// correlates to the decimal value of the assigned int. This function assumes that the identifier is either NULL or an int.
+// String literals cannot be freed.
+void change_int_identifier(Record* self, int num) {
+	if (self->identifier != NULL ) {
+		free(self->identifier);
+	}
+	int* new_int = malloc(sizeof(int));
+	*new_int = num;
+	self->identifier = new_int;
+}
+
+// Changes the identifier of a record that has an identifier type of IT_STRING. This is necessary as 'identifier' is of
+// type 'void*'. While the string will not equal the memory address as in the case of an int, the clone_record function 
+// requires strings to be malloc'd when copied, to avoid them from becoming shallow copies. This funciton is necessary
+// as if some records used direct assignment of string literals, and others used pointers to strings, the database would
+// be wildly inconsistent.
+void change_string_identifier(Record* self, String str) {
+	if (self->identifier != NULL) {
+		free(self->identifier);
+	}
+	String new_string = malloc(strlen(str) + 1);
+	strcpy_s(new_string, strlen(str) + 1, str);
+	self->identifier = new_string;
 }
 
 // Tests all of the above functions
 void test_record() {
 	Record testing_record;
 	Record other_record;
+	Record* cloning_test_record;
 	int result;
+
+	// Note: The Record variables will go from storing Strings to storing Ints, this is not behaviour that will be seen 
+	// in the actual database program, as records will maintian only a single IT_TYPE. IT_TYPEs change in this function
+	// for efficiency, simplicity, and to limit the number of variables being used.
+
+	// Note about testing destroy_record(): This function is diffucult to test as testing it would involve accessing 
+	// already freed memory. It would also be impossible to actually see if the identifier within a record is being
+	// freed, as that would of course require accessing the already freed identifier within an already freed record.
+	// Considering this, and considering the fact that destroy_record is called multiple times during testing successfully,
+	// this function does not require further testing
+
 
 	// 1 - Test 'create_record()'
 	printf("----------------\n1. create_record() test\n----------------\n");
@@ -136,22 +219,22 @@ void test_record() {
 	compare_records(&testing_record, &other_record);
 
 	// 2.5 - Test when the identifier types are both Strings, and when the first record comes after the second
-	testing_record.identifier = "AAAAB";
-	other_record.identifier = "AAAAA";
+	change_string_identifier(&testing_record, "AAAAB");
+	change_string_identifier(&other_record, "AAAAA");
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.5 - Expected Result: 1\n2.5 - Actual Result: ");
 	printf("%d", result);
 	
 	// 2.6 - Tests when the identifiers are both strings, and when the first record comes before the second
-	other_record.identifier = "AAAAC";
+	change_string_identifier(&other_record, "AAAAC");
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.6 - Expected Result: -1\n2.6 - Actual Result: ");
 	printf("%d", result);
 
 	// 2.7 - Tests when the identifiers are both strings, and when the records are the same
-	other_record.identifier = "AAAAB";
+	change_string_identifier(&other_record, "AAAAB");
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.7 - Expected Result: 0\n2.7 - Actual Result: ");
@@ -160,22 +243,24 @@ void test_record() {
 	// 2.8 - Tests when the identifiers are ints, and the first is larger than the second
 	testing_record.identifier_type = IT_INT;
 	other_record.identifier_type = IT_INT;
-	testing_record.identifier = 313;
-	other_record.identifier = 312;
+	testing_record.identifier = NULL;
+	other_record.identifier = NULL;
+	change_int_identifier(&testing_record, 313);
+	change_int_identifier(&other_record, 312);
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.8 - Expected Result: 1\n2.8 - Actual Result: ");
 	printf("%d", result);
 
 	// 2.9 - Tests when the identifiers are ints, and the first is smaller than the second
-	other_record.identifier = 314;
+	change_int_identifier(&other_record, 314);
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.9 - Expected Result: -1\n2.9 - Actual Result: ");
 	printf("%d", result);
 
 	// 2.10 - Tests when the identifiers are ints, and the first is the same as the second
-	testing_record.identifier = 314;
+	change_int_identifier(&testing_record, 314);
 
 	result = compare_records(&testing_record, &other_record);
 	printf("\n2.10 - Expected Result: 0\n2.10 - Actual Result: ");
@@ -197,14 +282,125 @@ void test_record() {
 	print_record(&testing_record);
 
 	// 3.3 - Tests when the identifier type is a string and has a value
-	testing_record.identifier = "John";
+	change_string_identifier(&testing_record, "John");
 	printf("\n3.3 - Expected Result: John\n3.3 - Actual Result: ");
 	print_record(&testing_record);
 
 	// 3.4 - Tests when the identifier is an int and has a value
 	testing_record.identifier_type = IT_INT;
-	testing_record.identifier = 40;
+	testing_record.identifier = NULL;
+	change_int_identifier(&testing_record, 40);
 	printf("\n3.4 - Expected Result: 40\n3.4 - Actual Result: ");
+	print_record(&testing_record);
+
+	// 4 - Test clone_record()
+	printf("\n----------------\n4. clone_record() test\n----------------\n");
+
+	// 4.1 - Test cloning an default record
+	testing_record.identifier = NULL;
+	testing_record.identifier_type = IT_UNSET;
+	cloning_test_record = clone_record(&testing_record);
+
+	// Identifiers should be equal (both NULL) and not share memory addresses. The two variables should also occupy 
+	// different memory addresses
+	printf("4.1 - Records have different memory addresses? ");
+	printf("%s\n", &testing_record != cloning_test_record ? "true" : "false");
+	printf("4.1 - Identifiers have different memory addresses? ");
+	printf("%s\n", &testing_record.identifier != cloning_test_record->identifier ? "true" : "false");
+	printf("4.1 - Identifiers are both NULL? ");
+	printf("%s\n", testing_record.identifier == NULL && cloning_test_record->identifier == NULL ? "true" : "false");
+
+	// 4.2 - Test cloning a record with an identifier type of int, but with a null identifier. This should not trigger the 
+	//		 outer if statement that copies identifiers. This tests the outer if statement
+	destroy_record(cloning_test_record);
+	testing_record.identifier_type = IT_INT;
+	cloning_test_record = clone_record(&testing_record);
+
+	// The two variables should occupy different memory addresses and have the same identifier_type
+	printf("4.2 - Records have different memory addresses? ");
+	printf("%s\n", &testing_record != cloning_test_record ? "true" : "false");
+	printf("4.2 - Identifiers have the same identifier_type? ");
+	printf("%s\n", testing_record.identifier_type == cloning_test_record->identifier_type ? "true" : "false");
+	printf("4.2 - Identifiers are both still NULL? ");
+	printf("%s\n", testing_record.identifier == NULL && cloning_test_record->identifier == NULL ? "true" : "false");
+
+	// 4.3 - Test cloning a record with a set int identifier. This tests the first outer if statement and the first
+	//	     if statement within it
+	destroy_record(cloning_test_record);
+	change_int_identifier(&testing_record, 2000);
+	cloning_test_record = clone_record(&testing_record);
+
+	// The two variables should have the same identifier and the identifier of both should be in different locations.
+	printf("4.3 - Identifiers are the same? ");
+	printf("%s\n", compare_records(&testing_record, cloning_test_record) == 0 ? "true" : "false");
+	printf("4.3 - Identifiers are in different memory locations? ");
+	printf("%s\n", testing_record.identifier != cloning_test_record->identifier ? "true" : "false");
+
+	// 4.4 - Test cloning a record with a set string identifier. A similar test to 4.2, where the identifier is not 
+	//		 set and the identifier_type is set is pointless, as the outer if statement has already been tested.
+	//       This tests the else statement within the first if statement.
+	destroy_record(cloning_test_record);
+	free(testing_record.identifier);
+	testing_record.identifier = NULL;
+	testing_record.identifier_type = IT_STRING;
+	change_string_identifier(&testing_record, "MEOW");
+	cloning_test_record = clone_record(&testing_record);
+
+	// The two variables should have the same identifier.
+	printf("4.4 - Identifiers are the same? ");
+	printf("%s\n", compare_records(&testing_record, cloning_test_record) == 0 ? "true" : "false");
+	printf("4.4 - Identifiers are in different memory locations? ");
+	printf("%s\n", testing_record.identifier != cloning_test_record->identifier ? "true" : "false");
+
+
+	// Further tests will be developed for this function once the functions it will need to rely on are implemented.
+	// Logic based on the 'data' field of a record cannot be tested completely until prototype 2 data structures have
+	// been implemented
+
+	// 5 - Test change_int_identifier()
+	printf("\n----------------\n5. change_int_identifier() test\n----------------\n");
+
+	// 5.1 - Test changing the identifier when the identifier is currently NULL (bypassing the 'if' statement)
+
+	testing_record.identifier_type = IT_INT;
+	free(testing_record.identifier);
+	testing_record.identifier = NULL;
+	change_int_identifier(&testing_record, 2);
+
+	printf("\n5.1 - Expected Result: 2\n5.1 - Actual Result: ");
+	print_record(&testing_record);
+	// If '2' was directly assigned to testing_record.identifier, the memory location would equal 2, rather than it
+	// pointing to an int that equals 2.
+	printf("\n5.1 - Identifier memory location does not equal 2? "); 
+	printf("%s", testing_record.identifier != 2 ? "true" : "false");
+
+	// 5.2 - Test changing the identifier when the identifier is already set (enters the if statement)
+	change_int_identifier(&testing_record, 3);
+
+	printf("\n5.2 - Expected Result: 3\n5.2 - Actual Result: ");
+	print_record(&testing_record);
+
+	// 6 - Test change_string_identifier()
+	printf("\n----------------\n6. change_string_identifier() test\n----------------\n");
+
+	// 6.1 - Test changing the identifier when the identifier is currently NULL (bypassing the 'if' statement)
+
+	testing_record.identifier_type = IT_STRING;
+	free(testing_record.identifier);
+	testing_record.identifier = NULL;
+	change_string_identifier(&testing_record, "hello");
+
+	printf("\n6.1 - Expected Result: hello\n6.1 - Actual Result: ");
+	print_record(&testing_record);
+	// If 'hello' was directly assigned to testing_record.identifier, the memory location would store a string literal
+	// rather than it pointing to a string.
+	printf("\n6.1 - Identifier points to a string? ");
+	printf("%s", testing_record.identifier != "hello" ? "true" : "false");
+
+	// 6.2 - Test changing the identifier when the identifier is already set (enters the if statement)
+	change_string_identifier(&testing_record, "hello there");
+
+	printf("\n6.2 - Expected Result: hello there\n6.2 - Actual Result: ");
 	print_record(&testing_record);
 
 }
