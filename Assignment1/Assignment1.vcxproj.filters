@@ -24,12 +24,18 @@
     <ClCompile Include="record.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="avl_tree.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linked_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="record.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="avl_tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
