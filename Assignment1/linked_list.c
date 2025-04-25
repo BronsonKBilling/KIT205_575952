@@ -182,6 +182,9 @@ void test_list() {
 	// then printing a list with elements, which is doen multiple times in the below tests. Therefore further
 	// tests of this function are not necessary
 
+	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
+	// true. Any false values are considered a failed test.
+
 	// 1 - Test 'create_list()'
 	printf("----------------\n1. create_list() test\n----------------\n");
 

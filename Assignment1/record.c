@@ -183,6 +183,9 @@ void test_record() {
 	// Considering this, and considering the fact that destroy_record is called multiple times during testing successfully,
 	// this function does not require further testing
 
+	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
+	// true. Any false values are considered a failed test.
+
 
 	// 1 - Test 'create_record()'
 	printf("----------------\n1. create_record() test\n----------------\n");

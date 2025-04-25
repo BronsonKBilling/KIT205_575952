@@ -49,13 +49,15 @@ void find_left_right_height(AVLNodePtr self, int* left, int* right) {
 	}
 }
 
+// Finds the height of an AVL node. Although nodes have a height field, it is necessary to have this function as the
+// height field will not be correct after rotating
 int get_avl_node_height(AVLNodePtr self) {
 	int left_height;
 	int right_height;
 	int height;
 
 	if (self == NULL) {
-		height = 0;
+		height = -1;
 	}
 	else {
 		left_height = get_avl_node_height(self->left);
@@ -78,10 +80,12 @@ int get_avl_node_height(AVLNodePtr self) {
 	return height;
 }
 
+// Performs a left rotation. This function assumes that self and its right child are not null. This function will
+// never be called unless these conditions are met as a left rotation would not be required.
 AVLNodePtr left_rotate(AVLNodePtr self) {
-	// The left child of y becomes the left child of x
-	// x becomes the new right child of y
-	// Whatever reference originally pointed to x now points to y
+	// The left child of self->right becomes the right child of self
+	// Self becomes the left child of self->right
+	// The reference of the right_child is returned to become the new reference of self
 
 	AVLNodePtr right_child = self->right; // Used so the right child is not lost when rotating
 
@@ -96,10 +100,12 @@ AVLNodePtr left_rotate(AVLNodePtr self) {
 	return right_child;
 }
 
+// Performs a right rotation. This function assumes that self and its left child are not null. This function will
+// never be called unless these conditions are met as a right rotation would not be required.
 AVLNodePtr right_rotate(AVLNodePtr self) {
-	// The right child of x becomes the left child of y
-	// Y becomes the new right child of x
-	// Whatever reference originally pointed to y now points to x
+	// The right child of self->left becomes the left child of self
+	// Self becomes the right child of self->left
+	// The reference of the left_child is returned to become the new reference of self
 
 	AVLNodePtr left_child = self->left; // Used so the left child is not lost when rotating
 
@@ -134,8 +140,6 @@ AVLNodePtr balance_tree(AVLNodePtr self) {
 	else {
 		left_initial_imbalance = false;
 	}
-
-	
 
 	if (left_initial_imbalance) {
 		find_left_right_height(self->left, &leftHeight, &rightHeight);
@@ -194,13 +198,12 @@ AVLNodePtr insert_avl_node(AVLNodePtr self, Record* data) {
 
 	}
 	else if (compare_records(copied_record, self->data) == -1) {
-		self->height = self->height + 1;
 		self->left = insert_avl_node(self->left, copied_record);
-
+		self->height = get_avl_node_height(self);
 	}
 	else if (compare_records(copied_record, self->data) == 1) {
-		self->height = self->height + 1;
 		self->right = insert_avl_node(self->right, copied_record);
+		self->height = get_avl_node_height(self);
 	}
 	
 	// get left and right heights
@@ -213,7 +216,7 @@ AVLNodePtr insert_avl_node(AVLNodePtr self, Record* data) {
 	return updated_node != NULL ? updated_node : self;
 }
 
-// Inserts a node with a given record item into an AVL tree
+// Inserts a node with a given record item into an AVL tree. This function assumes that the record is not a duplicate
 void insert_avl(AVL* self, Record* data) {
 	self->root = insert_avl_node(self->root, data);
 }
@@ -237,39 +240,394 @@ void print_avl(AVL* self) {
 	print_avl_node(self->root);
 }
 
+// deletes all the children of an AVL node and itself. This function will not be used for anything other than testing
+void delete_avl(AVLNodePtr self) {
+	if (self->left != NULL) {
+		delete_avl(self->left);
+	}
+	
+	if (self->right != NULL) {
+		delete_avl(self->right);
+	}
+
+	// By now, all children should be deleted
+
+	destroy_record(self->data);
+	free(self);
+}
+
+// Deletes all the children of an AVL node. This function will not be used for anything other than testing
+void delete_avl_children(AVL* self) {
+	if (self->root->left != NULL) {
+		delete_avl(self->root->left);
+	}
+
+	if (self->root->right != NULL) {
+		delete_avl(self->root->right);
+	}
+
+	self->root->left = NULL;
+	self->root->right = NULL;
+}
+
 // Tests all functions within the avl_tree.c file
 void test_avl() {
-	AVL test_tree = create_avl();
+	AVL test_tree;
+	AVL empty_tree = create_avl();
 	Record testing_record = create_record();
+	int leftHeight;
+	int rightHeight;
+	AVLNodePtr result;
 
+	// Note about testing wrappers: Functions such as find_avl_node and other wrapped private functions will be tested 
+	// by calling their wrapper functions. This is for convenience and for simplicity. As the wrapper functions simply
+	// call the private functions and have no other use or execution paths, they will not be tested directly.
+
+	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
+	// true. Any false values are considered a failed test.
+
+	// Note about testing find_left_right_height: This function contains two separate if else statements. These do not
+	// impact eachother or rely on eachother at all, so they can be tested at the same time for efficiency.
+
+	// Note about testing get_avl_node_height: This function is only called privately within this file and is never
+	// needed by any other files, so a wrapper function is not necessary for this function. This means that when testing
+	// this function, it will be called directly and the root of a tree will be the parameter.
+
+	// Note about testing delete_avl_children and delete_avl: These functions only exist to reset the test_tree for the
+	// purposes of testing. They will never be used outside of this context. Given this, and the fact that the call to 
+	// delete_avl_children below is given a full tree that executes every possible execution path successfully, further
+	// testing of this function is not necessary
+
+	// Note about testing balance_tree: This function will be tested by creating imbalances using the insert_avl_node function.
+	// This is still able to test all execution paths of the function without the added complexity of having to manually
+	// insert nodes. All execution paths of insert_avl_node will still be tested despite them being executed while testing
+	// balance_tree
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 1 - Test 'create_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n1. create_avl() test\n----------------\n");
+
+	// 1.1 - Tests if the function can create and return an AVL tree without throwing any errors
+	test_tree = create_avl();
+	printf("1.1 - Test passed! AVL Tree successfully created!\n");
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 2 - Test 'find_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n2. find_avl() tests\n----------------\n");
+
+	// 2.1 - Test when AVL is empty. This immediately executes first if statement, does not trigger recursion
+	//	     Expected value: NULL
+	result = find_avl(&test_tree, "Dave");
+	printf("2.1 - result == null? ");
+	printf("%s", result == NULL ? "true" : "false");
+
+	// 2.2 - Test recursing the left hand side of the tree. Triggers the second if statement, recurses, then the first if statement
+
+	// Tree root is "Peter" with "Hailey" as the left child
 	testing_record.identifier_type = IT_STRING;
-	change_string_identifier(&testing_record, "Alex");
-
+	change_string_identifier(&testing_record, "Peter");
+	insert_avl(&test_tree, &testing_record);
+	change_string_identifier(&testing_record, "Hailey");
 	insert_avl(&test_tree, &testing_record);
 
-	print_avl(&test_tree);
+	result = find_avl(&test_tree, "Hailey");
+	printf("\n2.2 - Expected value: Hailey\n2.2 - Actual value: ");
+	print_record(result->data);
 
-	printf("\n");
+	// 2.3 - Test recursing the right hand side of tree. Triggers the third if statement, then the first.
+
+	// Right child of "Peter" becomes "Robert"
+	change_string_identifier(&testing_record, "Robert");
+	insert_avl(&test_tree, &testing_record);
+
+	result = find_avl(&test_tree, "Robert");
+	printf("\n2.3 - Expected value: Robert\n2.3 - Actual value: ");
+	print_record(result->data);
+
+	// 2.4 - Test recursion when multiple left and right paths must be taken
+
+	// "Lucy" is the left child of "Mike", who is the right child of "Hailey". This means that the 
+	// function is recursing multiple times and taking every possible execution path with these executions
+	change_string_identifier(&testing_record, "Mike");
+	insert_avl(&test_tree, &testing_record);
+	change_string_identifier(&testing_record, "Rachel");
+	insert_avl(&test_tree, &testing_record);
+	change_string_identifier(&testing_record, "Lucy");
+	insert_avl(&test_tree, &testing_record);
+
+	result = find_avl(&test_tree, "Lucy");
+	printf("\n2.4 - Expected value: Lucy\n2.4 - Actual value: ");
+	print_record(result->data);
+
+	// 2.5 - Tests when the data item is not present in the tree
+	result = find_avl(&test_tree, "Hose");
+	printf("\n2.5 - result == null? ");
+	printf("%s\n", result == NULL ? "true" : "false");
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 3 - Test 'find_left_right_height()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n3. find_left_right_height() tests\n----------------\n");
+
+	// 3.1 - Tests when both children are NULL. This tests the first if statement that checks if the left child is NULL,
+	//	     and the second that checks if the right child is NULL
+
+	// Finds the left and right heights of the node containing "Rachel", this node is a leaf
+	find_left_right_height(test_tree.root->right->left, &leftHeight, &rightHeight);
+
+	printf("\n3.1 - Expected values: -1, -1\n3.1 - Actual values: ");
+	printf("%d, %d\n", leftHeight, rightHeight);
+
+	// 3.2 - Tests when both children have a height. This tests the first and second else statements
+	find_left_right_height(test_tree.root, &leftHeight, &rightHeight);
+
+	printf("\n3.2 - Expected values: 1, 1\n3.2 - Actual values: ");
+	printf("%d, %d\n", leftHeight, rightHeight);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 4 - Test 'get_avl_node_height()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n4. get_avl_node_height() tests\n----------------\n");
+
+	// 4.1 - Test getting the height of an empty tree
+	result = get_avl_node_height(empty_tree.root);
+	printf("4.1 - Expected result: -1\n4.1 - Actual result: ");
+	printf("%d", result);
+
+	// 4.2 - Test getting the height of a tree with only 1 item. This triggers the else statement and the first if 
+	//       statement inside it
+	change_string_identifier(&testing_record, "Pablo");
+	insert_avl(&empty_tree, &testing_record);
+
+	result = get_avl_node_height(empty_tree.root);
+	printf("\n4.2 - Expected result: 0\n4.2 - Actual result: ");
+	printf("%d", result);
+
+	// 4.3 - Test getting the height of a tree where the tree must find the height of its left subtree(s). Triggers the
+	//		 else statement and the first else if within it.
+	change_string_identifier(&testing_record, "Annie");
+	insert_avl(&empty_tree, &testing_record);
+
+	result = get_avl_node_height(empty_tree.root);
+	printf("\n4.3 - Expected result: 1\n4.3 - Actual result: ");
+	printf("%d", result);
+
+	// 4.4 - Test getting the height of a tree where the tree must find the height of its right subtree(s). Triggers the
+	//		 else statement and the else within it.
+	destroy_record(empty_tree.root->left->data);
+	free(empty_tree.root->left);
+	empty_tree.root->left = NULL;
+	change_string_identifier(&testing_record, "Randy");
+	insert_avl(&empty_tree, &testing_record);
+
+	result = get_avl_node_height(empty_tree.root);
+	printf("\n4.4 - Expected result: 1\n4.4 - Actual result: ");
+	printf("%d", result);
+
+	// 4.5 - Test getting the height of a tree where the tree must find the height of both of its subtree(s). Triggers the
+	//		 else statement and all if, else if, and else statements within it.
+	result = get_avl_node_height(test_tree.root);
+	printf("\n4.5 - Expected result: 2\n4.5 - Actual result: ");
+	printf("%d", result);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 5 - Test 'left_rotate()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n5. left_rotate() tests\n----------------");
+
+	// 5.1 - Test a left rotation. This function has no alternative execution paths, so only one test is necessary.
+	//		 The assumptions stated in the function header also make trying the function will different NULL values unnecessary.
+	//		 After the function is finished and the output is used, the left child of the right child of the node inputted into the
+	//	     function should equal the inputs right child, and the inputted node should equal the left child of the input's 
+	//		 right child. 
+
+	// The insertion results in a RR imbalance at the node containing  "Steve"
+	change_string_identifier(&testing_record, "Steve");
+	insert_avl(&test_tree, &testing_record);
+	change_string_identifier(&testing_record, "Taylah");
+	insert_avl(&test_tree, &testing_record);
+	// Manual insertion is needed to not trigger the rotate function premeturely
+	change_string_identifier(&testing_record, "Xavier");
+	test_tree.root->right->right->right->right = malloc(sizeof(struct avlNode));
+	test_tree.root->right->right->right->right->data = clone_record(&testing_record);
+	test_tree.root->right->right->right->right->height = 0;
+	test_tree.root->right->right->right->right->left = NULL;
+	test_tree.root->right->right->right->right->right = NULL;
+
+	// Performs a rotation at "Steve"
+	test_tree.root->right->right = left_rotate(test_tree.root->right->right);
+
+	// root->right->right should now equal "Taylah". root->right->right->left should equal "Steve". root->right->right->right
+	// should equal "Xavier"
+
+	printf("\n5.1 - Expected result: Taylah\n5.1 - Actual result: ");
+	print_record(test_tree.root->right->right->data);
+	printf("\n5.1 - Expected result: Steve\n5.1 - Actual result: ");
+	print_record(test_tree.root->right->right->left-> data);
+	printf("\n5.1 - Expected result: Xavier\n5.1 - Actual result: ");
+	print_record(test_tree.root->right->right->right->data);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 6 - Test 'right_rotate()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n6. right_rotate() tests\n----------------");
+
+	// 6.1 - Test a right rotation. This function has no alternative execution paths, so only one test is necessary.
+	//		 The assumptions stated in the function header also make trying the function will different NULL values unnecessary.
+	//		 After the function is finished and the output is used, the right child of the left child of the node inputted into the
+	//	     function should equal the inputs left child, and the inputted node should equal the right child of the input's 
+	//		 left child. 
+
+	// The insertion results in a LL imbalance at the node containing  "Hailey"
+	// Manual insertion is needed to not trigger the rotate function premeturely
+	change_string_identifier(&testing_record, "Catrina");
+	insert_avl(&test_tree, &testing_record);
+	change_string_identifier(&testing_record, "Bryan");
+	test_tree.root->left->left->left->left = malloc(sizeof(struct avlNode));
+	test_tree.root->left->left->left->left->data = clone_record(&testing_record);
+	test_tree.root->left->left->left->left->height = 0;
+	test_tree.root->left->left->left->left->left = NULL;
+	test_tree.root->left->left->left->left->right = NULL;
+
+	// Performs a rotation at "Hailey"
+	test_tree.root->left->left = right_rotate(test_tree.root->left->left);
+
+	// root->left->left should now equal "Catrina". root->left->left->left should equal "Bryan". root->left->left->right
+	// should equal "Hailey"
+
+	printf("\n6.1 - Expected result: Catrina\n6.1 - Actual result: ");
+	print_record(test_tree.root->left->left->data);
+	printf("\n6.1 - Expected result: Bryan\n6.1 - Actual result: ");
+	print_record(test_tree.root->left->left->left->data);
+	printf("\n6.1 - Expected result: Hailey\n6.1 - Actual result: ");
+	print_record(test_tree.root->left->left->right->data);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 7 - Test 'balance_tree()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n7. balance_tree() tests\n----------------\n");
+
+	// 7.1 - Test when there is a left-left imbalance. This executes the first if statement, setting left_initial_imbalance
+	//		 to true. It then executes the if statement after this and then the if statement within that. It triggers the 
+	//	     switch statement that handles LL imbalance and performs a single right rotation.
+	
+	delete_avl_children(&test_tree);
+	change_string_identifier(&testing_record, "Kelly");
+	insert_avl(&test_tree, &testing_record);
+	
+	// Inserting this new node will cause an imbalance
 	change_string_identifier(&testing_record, "Bryce");
 	insert_avl(&test_tree, &testing_record);
-	print_avl(&test_tree);
 
-	printf("\n");
-	change_string_identifier(&testing_record, "Charlie");
-	insert_avl(&test_tree, &testing_record);
-	print_avl(&test_tree);
-
-	printf("\n");
-	change_string_identifier(&testing_record, "Danny");
-	insert_avl(&test_tree, &testing_record);
-	print_avl(&test_tree);
-
-	printf("\n");
-	change_string_identifier(&testing_record, "Daanni");
-	insert_avl(&test_tree, &testing_record);
-	print_avl(&test_tree);
-
+	// If balance_tree worked correctly, the LL imbalance should be corrected with a single right rotation.
+	printf("7.1 - Expected result (root): Kelly\n7.1 - Actual result: ");
+	print_record(test_tree.root->data);
+	printf("\n7.1 - Expected result (left child): Bryce\n7.1 - Actual result: ");
+	print_record(test_tree.root->left->data);
+	printf("\n7.1 - Expected result (right child): Peter\n7.1 - Actual result: ");
 	print_record(test_tree.root->right->data);
 
-	print_record(find_avl(&test_tree, "Danny")->data);
+	// 7.2 - Test when there is a left-right imbalance. This executes the first if statement, setting left_initial_imbalance
+	//		 to true. It then executes the if statement after this and then the else statement within that. It triggers the 
+	//	     switch statement that handles LR imbalance and performs a left rotation then a right rotation.
+
+	delete_avl_children(&test_tree);
+	change_string_identifier(&testing_record, "India");
+	insert_avl(&test_tree, &testing_record);
+
+	// Inserting this new node will cause an imbalance
+	change_string_identifier(&testing_record, "Jen");
+	insert_avl(&test_tree, &testing_record);
+
+	// If balance_tree worked correctly, the LL imbalance should be corrected with a single right rotation.
+	printf("\n7.2 - Expected result (root): Jen\n7.2 - Actual result: ");
+	print_record(test_tree.root->data);
+	printf("\n7.2 - Expected result (left child): India\n7.2 - Actual result: ");
+	print_record(test_tree.root->left->data);
+	printf("\n7.2 - Expected result (right child): Kelly\n7.2 - Actual result: ");
+	print_record(test_tree.root->right->data);
+
+	// 7.3 - Test when there is a right-left imbalance. This executes the first else statement, setting left_initial_imbalance
+	//		 to false. It then executes the else statement after this and then the if statement within that. It triggers the 
+	//	     switch statement that handles RL imbalance and performs a right rotation then a left rotation.
+
+	delete_avl_children(&test_tree);
+	change_string_identifier(&testing_record, "Peter");
+	insert_avl(&test_tree, &testing_record);
+
+	// Inserting this new node will cause an imbalance
+	change_string_identifier(&testing_record, "Kayla");
+	insert_avl(&test_tree, &testing_record);
+
+	// If balance_tree worked correctly, the LL imbalance should be corrected with a single right rotation.
+	printf("\n7.3 - Expected result (root): Kayla\n7.3 - Actual result: ");
+	print_record(test_tree.root->data);
+	printf("\n7.3 - Expected result (left child): Jen\n7.3 - Actual result: ");
+	print_record(test_tree.root->left->data);
+	printf("\n7.3 - Expected result (right child): Peter\n7.3 - Actual result: ");
+	print_record(test_tree.root->right->data);
+
+	// 7.4 - Test when there is a right-right imbalance. This executes the first else statement, setting left_initial_imbalance
+	//		 to false. It then executes the else statement after this and then the else statement within that. It triggers the 
+	//	     switch statement that handles RR imbalance and performs a single left rotation.
+
+	delete_avl_children(&test_tree);
+	change_string_identifier(&testing_record, "Larry");
+	insert_avl(&test_tree, &testing_record);
+
+	// Inserting this new node will cause an imbalance
+	change_string_identifier(&testing_record, "Peta");
+	insert_avl(&test_tree, &testing_record);
+
+	// If balance_tree worked correctly, the LL imbalance should be corrected with a single right rotation.
+	printf("\n7.4 - Expected result (root): Larry\n7.4 - Actual result: ");
+	print_record(test_tree.root->data);
+	printf("\n7.4 - Expected result (left child): Kayla\n7.4 - Actual result: ");
+	print_record(test_tree.root->left->data);
+	printf("\n7.4 - Expected result (right child): Peta\n7.4 - Actual result: ");
+	print_record(test_tree.root->right->data);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 8 - Test 'insert_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n8. insert_avl() tests\n----------------\n");
+
+	delete_avl_children(&test_tree);
+	free(test_tree.root->data);
+	free(test_tree.root);
+	test_tree.root = NULL;
+
+	// 8.1 - Test insert when the tree is empty. Triggers first if statement.
+	insert_avl(&test_tree, &testing_record);
+	printf("8.1 - Expected result: (_Peta_)\n8.1 - Actual result: ");
+	print_avl(&test_tree);
+
+	// 8.2 - Test inserting into left subtree. Triggers second if statement then first.
+	change_string_identifier(&testing_record, "Kyle");
+	insert_avl(&test_tree, &testing_record);
+	printf("\n8.2 - Expected result: ((_Kyle_)Peta_)\n8.2 - Actual result: ");
+	print_avl(&test_tree);
+
+	// 8.3 - Test inserting into right subtree. Triggers third if statement, then first.
+	change_string_identifier(&testing_record, "Valerie");
+	insert_avl(&test_tree, &testing_record);
+	printf("\n8.3 - Expected result: ((_Kyle_)Peta(_Valerie_))\n8.3 - Actual result: ");
+	print_avl(&test_tree);
+
+	// 8.4 - Test inserting into a tree when left and right paths need to be taken. Triggers all if statements
+	change_string_identifier(&testing_record, "Lyra");
+	insert_avl(&test_tree, &testing_record);
+	printf("\n8.4 - Expected result: ((_Kyle(_Lyra_))Peta(_Valerie_))\n8.4 - Actual result: ");
+	print_avl(&test_tree);
+
+	// 8.5 - Test insertion when it will cause an imbalance. This triggers all if statements but also the if statement
+	//	     at the end of the function that checks for an imbalance.
+	change_string_identifier(&testing_record, "Laine");
+	insert_avl(&test_tree, &testing_record);
+	printf("\n8.5 - Expected result: (((_Kyle_)Laine(_Lyra_))Peta(_Valerie_))\n8.5 - Actual result: ");
+	print_avl(&test_tree);
+
+
 }
