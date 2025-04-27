@@ -61,11 +61,18 @@ AVLNodePtr find_avl(AVL* self, String identifier);
 void insert_avl(AVL* self, Record* data);
 
 /**
- * @brief Prints the identifiers of records in the data field of each AVL node, in ascending order 
+ * @brief Prints the identifiers of records in the data field of each AVL node, in ascending order with a tree structure
  *
  * @param self Pointer to the AVL tree to print
  */
 void print_avl(AVL* self);
+
+/**
+ * @brief Prints the identifiers of records in the data field of each AVL node, in ascending order with no tree structure
+ *
+ * @param self Pointer to the AVL tree to print
+ */
+void print_avl_without_tree(AVL* self);
 
 /**
  * @brief Tests all functions within the avl_tree.c file

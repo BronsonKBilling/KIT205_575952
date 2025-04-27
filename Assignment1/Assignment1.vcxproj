@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -131,9 +131,11 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="linked_list.c" />
     <ClCompile Include="record.c" />
+    <ClCompile Include="database.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avl_tree.h" />
+    <ClInclude Include="database.h" />
     <ClInclude Include="linked_list.h" />
     <ClInclude Include="record.h" />
   </ItemGroup>

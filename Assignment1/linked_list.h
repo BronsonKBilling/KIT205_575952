@@ -20,8 +20,10 @@ typedef struct list {
 
 List create_list();
 
-void insert(List* self, Record* data);
+void insert_list(List* self, Record* data);
 
 void print_list(List* self);
+
+ListNodePtr find_list(List* self, void* identifier, IdentifierType type);
 
 void test_list();

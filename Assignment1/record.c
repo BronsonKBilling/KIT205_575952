@@ -68,6 +68,15 @@ int compare_records(Record* self, Record* other) {
 	return comparison_result;
 }
 
+// A wrapper function to compare records by inputting a identifier type and identifier, rather than a record
+int compare_record_by_identifier(Record* self, void* identifier, IdentifierType type) {
+	Record dummy_record; // A record used to search for the given identifier
+	dummy_record.identifier_type = type;
+	dummy_record.identifier = identifier;
+
+	return compare_records(self, &dummy_record);
+}
+
 // Prints the identifier of a record
 // This function assumes that the identifier types match the identifiers.
 void print_record(Record* self) {
@@ -93,8 +102,6 @@ void print_record(Record* self) {
 		format = "%d";
 		printf("%d", *(int*)self->identifier);
 	}
-
-	
 }
 
 // Clones a record and returns a pointer to the clone. This function assumes that records with a set identifier type also
@@ -129,13 +136,12 @@ Record* clone_record(Record* self) {
 
 }
 
+// Destroys a record and frees memory. Only used for testing purposes to free up variables and not in the database implementation
 void destroy_record(Record* self) {
 	if (self->identifier != NULL && self->identifier_type != IT_STRING) {
 		free(self->identifier);
 	}
 	
-	// if (record->data_type == DT_TREE) {destroy_tree()} else if (record->data_type == DT_LIST) {destroy_list()}
-
 	free(self);
 }
 
@@ -181,7 +187,8 @@ void test_record() {
 	// already freed memory. It would also be impossible to actually see if the identifier within a record is being
 	// freed, as that would of course require accessing the already freed identifier within an already freed record.
 	// Considering this, and considering the fact that destroy_record is called multiple times during testing successfully,
-	// this function does not require further testing
+	// this function does not require further testing. This function is also only used for testing and is not used for the 
+	// database implementation, which explains why it does not clear data, as this is not necessary for testing purposes.
 
 	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
 	// true. Any false values are considered a failed test.

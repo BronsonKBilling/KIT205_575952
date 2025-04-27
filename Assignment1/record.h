@@ -26,6 +26,8 @@ Record create_record();
 
 int compare_records(Record* self, Record* other);
 
+int compare_record_by_identifier(Record* self, void* identifier, IdentifierType type);
+
 void print_record(Record* self);
 
 Record* clone_record(Record* record);

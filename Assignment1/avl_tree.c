@@ -235,7 +235,21 @@ void print_avl_node(AVLNodePtr self) {
 	}
 }
 
-// Prints the identifiers of records in the data field of each AVL node, in ascending order
+// Recursive function to print in order with no tree structure
+void print_avl_node_without_tree(AVLNodePtr self) {
+	if (self != NULL) {
+		print_avl_node_without_tree(self->left);
+		print_record(self->data);
+		print_avl_node_without_tree(self->right);
+	}
+}
+
+// Prints the identifiers of records in the data field of each AVL node, in ascending order with no tree structure
+void print_avl_without_tree(AVL* self) {
+	print_avl_node_without_tree(self->root);
+}
+
+// Prints the identifiers of records in the data field of each AVL node, in ascending order with a tree structure
 void print_avl(AVL* self) {
 	print_avl_node(self->root);
 }

@@ -115,7 +115,7 @@ void insert_at_middle_from_rear(List* self, Record* data) {
 // in self. Duplicates within a nested list are fine. Comparisons only factor in record identifiers, data is handled
 // by the database. This function also assumes that the data types are the same between the List and the new record.
 // If types are different then this issue will be handled downstream in the 'compare_records() function
-void insert(List* self, Record* data) {
+void insert_list(List* self, Record* data) {
 
 	if (self->head == NULL || compare_records(self->head->data, data) == 1) {
 		insert_at_front(self, data);
@@ -162,6 +162,52 @@ void print_list(List* self) {
 		current = current->next;
 		printf("\n");
 	}
+}
+
+ListNodePtr find_list_from_front(List* self, void* identifier, IdentifierType type) {
+	ListNodePtr result = NULL;
+	ListNodePtr current = self->head;
+
+	while (current != NULL && result == NULL) {
+		if (compare_record_by_identifier(current->data, identifier, type) == 0) {
+			result = current;
+		}
+		else {
+			current = current->next;
+		}
+	}
+
+	return result;
+}
+
+ListNodePtr find_list_from_rear(List* self, void* identifier, IdentifierType type) {
+	ListNodePtr result = NULL;
+	ListNodePtr current = self->tail;
+
+	while (current != NULL && result == NULL) {
+		if (compare_record_by_identifier(current->data, identifier, type) == 0) {
+			result = current;
+		}
+		else {
+			current = current->prev;
+		}
+	}
+
+	return result;
+}
+
+// Returns a pointer to a list node containing a record with the given identifier. This function assumes that the
+// list is not empty
+ListNodePtr find_list(List* self, void* identifier, IdentifierType type) {
+	ListNodePtr result;
+	if (type == IT_INT  && *(int*)self->tail->data->identifier / 2 < identifier) {
+		result = find_list_from_rear(self, identifier, type);
+	}
+	else {
+		result = find_list_from_front(self, identifier, type);
+	}
+
+	return result;
 }
 
 // Tests all above functions
@@ -325,8 +371,8 @@ void test_list() {
 	printf("6.1 - Expected Result:\n1\n2\n3\n4\n6.1 - Actual Result:\n");
 	print_list(&testing_list);
 
-	// 7 - Test insert()
-	printf("----------------\n7. insert() test\n----------------\n");
+	// 7 - Test insert_list()
+	printf("----------------\n7. insert_list() test\n----------------\n");
 
 	// 7.1 - Test inserting when the list is empty. This tests the first if statement as self->head == NULL
 
@@ -335,35 +381,35 @@ void test_list() {
 	delete_node(&testing_list, testing_list.head);
 	delete_node(&testing_list, testing_list.head);
 	change_int_identifier(&testing_record, 2);
-	insert(&testing_list, &testing_record);
+	insert_list(&testing_list, &testing_record);
 
 	printf("7.1 - Expected Result: 2\n7.1 - Actual Result: ");
 	print_list(&testing_list);
 
 	// 7.2 - Test when the record to insert comes before the head of the list. This also triggers the first if statement.
 	change_int_identifier(&testing_record, 1);
-	insert(&testing_list, &testing_record);
+	insert_list(&testing_list, &testing_record);
 
 	printf("7.2 - Expected Result:\n1\n2\n7.2 - Actual Result:\n");
 	print_list(&testing_list);
 
 	// 7.3 - Test when the record to insert comes after the tail of the list. This triggers the first else if statement.
 	change_int_identifier(&testing_record, 10);
-	insert(&testing_list, &testing_record);
+	insert_list(&testing_list, &testing_record);
 
 	printf("7.3 - Expected Result:\n1\n2\n10\n7.3 - Actual Result:\n");
 	print_list(&testing_list);
 
 	// 7.4 - Test when the record to insert is larger than half of the tail. This triggers the second else if statement.
 	change_int_identifier(&testing_record, 6);
-	insert(&testing_list, &testing_record);
+	insert_list(&testing_list, &testing_record);
 
 	printf("7.4 - Expected Result:\n1\n2\n6\n10\n7.4 - Actual Result:\n");
 	print_list(&testing_list);
 
 	// 7.5 - Test when the record to insert is smaller than half of the tail. This triggers the final else statement.
 	change_int_identifier(&testing_record, 3);
-	insert(&testing_list, &testing_record);
+	insert_list(&testing_list, &testing_record);
 
 	printf("7.5 - Expected Result:\n1\n2\n3\n6\n10\n7.5 - Actual Result:\n");
 	print_list(&testing_list);
