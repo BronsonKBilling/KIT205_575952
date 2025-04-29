@@ -22,6 +22,8 @@ List create_list();
 
 void insert_list(List* self, Record* data);
 
+void delete_node(List* self, ListNodePtr node_to_delete);
+
 void print_list(List* self);
 
 ListNodePtr find_list(List* self, void* identifier, IdentifierType type);

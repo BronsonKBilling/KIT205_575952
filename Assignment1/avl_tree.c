@@ -240,7 +240,9 @@ void print_avl_node_without_tree(AVLNodePtr self) {
 	if (self != NULL) {
 		print_avl_node_without_tree(self->left);
 		print_record(self->data);
+		printf("\n");
 		print_avl_node_without_tree(self->right);
+		
 	}
 }
 
