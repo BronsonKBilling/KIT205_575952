@@ -34,9 +34,10 @@ limiting insertions due to its fixed size. A
 */
 
 int main() {
-	//test_record();
-	//test_list();
-    //test_avl();
+	test_record();
+	test_list();
+    test_avl();
 	test_database();
+
 	return 0;
 }

@@ -132,12 +132,16 @@
     <ClCompile Include="linked_list.c" />
     <ClCompile Include="record.c" />
     <ClCompile Include="database.c" />
+    <ClCompile Include="data.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avl_tree.h" />
     <ClInclude Include="database.h" />
     <ClInclude Include="linked_list.h" />
     <ClInclude Include="record.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data_creator.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
