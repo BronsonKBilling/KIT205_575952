@@ -30,7 +30,6 @@
     <ClCompile Include="database.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="data.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linked_list.h">
@@ -48,5 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data_creator.py" />
+    <None Include="data.txt" />
   </ItemGroup>
 </Project>

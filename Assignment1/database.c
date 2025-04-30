@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 #include "record.h"
 #include "linked_list.h"
 #include "avl_tree.h"
@@ -105,8 +106,6 @@ void print_fighters_in_event(List* database, int event_code, Prototype prototype
 void print_events_of_fighter_list(List* database, String fighter_name) {
 	ListNodePtr current = database->head;
 
-	printf("%s has fought in the following events:\n", fighter_name);
-
 	while (current != NULL) {
 		if (current->data->data != NULL && find_list(current->data->data, fighter_name, IT_STRING) != NULL) {
 			print_record(current->data);
@@ -120,8 +119,6 @@ void print_events_of_fighter_list(List* database, String fighter_name) {
 // This funciton assumes that the database has at least 1 event
 void print_events_of_fighter_avl(List* database, String fighter_name) {
 	ListNodePtr current = database->head;
-
-	printf("%s has fought in the following events:\n", fighter_name);
 
 	while (current != NULL) {
 		if (current->data->data != NULL && find_avl(current->data->data, fighter_name) != NULL) {
@@ -145,6 +142,65 @@ void print_events_of_fighter(List* database, String fighter_name, Prototype prot
 	}
 }
 
+// Reads a file and places data of fighters and events into a given database
+// File reading code is derivative of week 9 tutorial
+// This funciton assumes that the file lines being read have not been added to the database yet
+void read_data(List* database, int start, int end, Prototype prototype) {
+	FILE* file = fopen("ufc_dataset.csv", "r"); // The file containing all records
+	int event;				   // The event currently being iterated over in the file
+	int most_recent_event = 0; // The event of the fighter that was added most recently. Defaults to 0 to enable comparisons before needing to assign
+	char line[15];		       // Temporarily stores line of text, maximum length is 13 characters + terminator and \n
+	char fighter[11];	       // Temporarily stores name of fighter, maximum length is 9 characters + terminator and \n
+
+	if (file == NULL) {
+		return;
+	}
+
+	// Skip lines up to 'start'
+	// This for loop was made by ChatGPT
+	for (int i = 0; i < start; i++) {
+		if (!fgets(line, sizeof(line), file)) {
+			return;  // EOF or error early
+		}
+	}
+
+	if (database->head != NULL) {
+		most_recent_event = *(int*)database->head->data->identifier;
+	}
+
+	for (int i = start; i < end; i++)
+	{
+		fgets(line, sizeof(line), file);
+		// Next five lines were made by ChatGPT
+		char* comma = strchr(line, ',');
+		*comma = '\0';
+		event = atoi(line);
+		strncpy_s(fighter, sizeof(fighter), comma + 1, _TRUNCATE);
+		fighter[strcspn(fighter, "\n")] = 0; // Remove newline
+
+		if (event != most_recent_event || database->head == NULL) {
+			add_event(database, event);
+		}
+		most_recent_event = event;
+		add_fighter_to_event(database, event, fighter, prototype);
+
+	}
+}
+
+// Times the many to many function for a given database and returns the time in milliseconds. Function is derived
+// from week 4 tutorial
+long time_many_to_many(List* database, Prototype prototype) {
+	clock_t start;
+	clock_t difference;
+	long milliseconds;
+
+	start = clock();
+	print_events_of_fighter(database, "AA AA", prototype);
+	difference = clock() - start;
+	milliseconds = difference * 1000 / CLOCKS_PER_SEC;
+
+	return milliseconds;
+}
 
 
 // Tests this files functions
@@ -156,6 +212,10 @@ void test_database() {
 	// would need to be replicated prior to every test anyway. This makes testing far more succinct while still being able
 	// to actually test the functions and all of their execution paths. Considering this, add_fighter_to_event will be tested
 	// directly first.
+
+	// Note about testing read_data: The first if statement cannot be tested well as it will never be triggered in this 
+	// environment. It can be triggered if the file is not present in the directory, but this will do exactly what is 
+	// expected and just exit the function. This is why further testing of this execution path is not necessary
 
 	List database = create_list();
 	List empty_database = create_list();
@@ -298,13 +358,233 @@ void test_database() {
 	print_events_of_fighter(&empty_database, "John Fighter", LINKED_LIST_LINKED_LIST);
 
 	// 9.2 - Test when the database is of prototype 1 (LINKED_LIST_LINKED_LIST). Tests if else statement
-	printf("\n9.2 - Expected value: [fighter] has fought in the following events:\n1\n2\n9.2 - Actual value: ");
+	printf("\n9.2 - Expected value: \n1\n2\n9.2 - Actual value:\n");
 	print_events_of_fighter(&database, "John Fighter", LINKED_LIST_LINKED_LIST);
 
 	// 9.3 - Test when the database is of prototype 2 (LINKED_LIST_LINKED_LIST). Tests else statement
-	printf("\n9.3 - Expected value: [fighter] has fought in the following events:\n1\n2\n9.3 - Actual value: ");
+	printf("9.3 - Expected value:\n1\n2\n9.3 - Actual value:\n");
 	print_events_of_fighter(&avl_database, "John Fighter", LINKED_LIST_AVL_TREE);
 
+	printf("----------------\n10. read_data() test\n----------------\n");
 
+	// 10.1 - Test adding data to an empty database. This will trigger the 'if' statement within the final for loop of the 
+	//	      function add an event that currently does not exist in the database. Test is successful if the data is successfully
+	//		  added
+	read_data(&empty_database, 0, 1, LINKED_LIST_LINKED_LIST);
+
+	printf("10.1 - Expected value: 250\n10.1 - Actual value: ");
+	print_events(&empty_database);
+	printf("10.1 - Expected value: A B\n10.1 - Actual value: ");
+	print_fighters_in_event(&empty_database, 250, LINKED_LIST_LINKED_LIST);
+
+	// 10.2 - Test adding data to a database with the same event and with a start value > 0. This tests the for loop that
+	//		  skips fgets lines and the second non nested if statement.
+	read_data(&empty_database, 1, 2, LINKED_LIST_LINKED_LIST);
+
+	printf("10.2 - Expected value: 250\n10.2 - Actual value: ");
+	print_events(&empty_database);
+	printf("10.2 - Expected value: \nA B\nC D\n10.2 - Actual value:\n");
+	print_fighters_in_event(&empty_database, 250, LINKED_LIST_LINKED_LIST);
+
+	// 10.3 - Test adding data to a database where the event number changes during the function's execution. This further 
+	//		  tests the if statement within the final for loop
+	read_data(&empty_database, 9999, 10002, LINKED_LIST_LINKED_LIST);
+
+	printf("10.3 - Expected value:\n250\n249\n10.3 - Actual value: ");
+	print_events(&empty_database);
+	printf("10.3 - Expected value: \nA B\nC D\n10.3 - Actual value:\n");
+	print_fighters_in_event(&empty_database, 249, LINKED_LIST_LINKED_LIST);
+
+	printf("----------------\n11. time_many_to_many() test\n----------------\n");
+
+	// 11.1 - Tests the function and whether it can time the execution of print_events_of_fighter(). This function has
+	//		  a single execution path so no other tests are needed
+	printf("11.1 - Expected value: [time]\n11.1 - Actual value: ");
+	printf("%d", time_many_to_many(&database, LINKED_LIST_LINKED_LIST));
+
+}
+
+// Evaluates the most time sensitive function of this database file (print_events_of_fighter) for both prototypes using
+// testing data. This entire function took over 6 minutes to complete on a high powered PC.
+void evaluate_database() {
+	List database = create_list();
+	List avl_database = create_list();
+	long result;
+
+	// The two values of note are m (the number of events) and n (the number of fighters within an event) each test will 
+	// deal with increasing amounts of both
+
+	printf("------------------------------------------------------\n              Database evaluation tests");
+	printf("\nWARNING: These tests took more than 9 minutes to complete\n       on a high end PC. Storing 2.5M records also\n");
+	printf("             uses multiple GB of memory\n------------------------------------------------------\n");
+
+	// 1. Test time to print all events of a fighter when 10 records have been added (when m=1 and n1 = 10)
+	printf("--------------------10 records--------------------\n\n");
+
+	read_data(&database, 0, 10, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 0, 10, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=10 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=10 = %d milliseconds\n\n", result);
+
+	// 2. Test time to print all events of a fighter when 50 records have been added (when m=1 and n1 = 50)
+	printf("--------------------50 records--------------------\n\n");
+
+	read_data(&database, 10, 50, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 10, 50, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=50 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=50 = %d milliseconds\n\n", result);
+
+	// 3. Test time to print all events of a fighter when 100 records have been added (when m=1 and n1 = 100)
+	printf("--------------------100 records--------------------\n\n");
+
+	read_data(&database, 50, 100, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 50, 100, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=100 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=100 = %d milliseconds\n\n", result);
+
+	// 4. Test time to print all events of a fighter when 250 records have been added (when m=1 and n1 = 250)
+	printf("--------------------250 records--------------------\n\n");
+
+	read_data(&database, 100, 250, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 100, 250, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=250 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=250 = %d milliseconds\n\n", result);
+
+	// 5. Test time to print all events of a fighter when 500 records have been added (when m=1 and n1 = 500)
+	printf("--------------------500 records--------------------\n\n");
+
+	read_data(&database, 250, 500, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 250, 500, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=500 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=500 = %d milliseconds\n\n", result);
+
+	// 6. Test time to print all events of a fighter when 5000 records have been added (when m=1 and n1= 5,000)
+	printf("--------------------5,000 records--------------------\n\n");
+
+	read_data(&database, 500, 5000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 500, 5000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=5,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=5,000 = %d milliseconds\n\n", result);
+
+	// 7. Test time to print all events of a fighter when 10,000 records have been added (when m=1 and n1= 10,000)
+	printf("--------------------10,000 records--------------------\n\n");
+
+	read_data(&database, 5000, 10000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 5000, 10000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=1 and n1=10,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=1 and n1=10,000 = %d milliseconds\n\n", result);
+
+	// 8. Test time to print all events of a fighter when 20,000 records have been added (when m=2 and n1+n2= 20,000)
+	printf("--------------------20,000 records--------------------\n\n");
+
+	read_data(&database, 10000, 20000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 10000, 20000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=2 and n1+n2=20,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=2 and n1+n2=20,000 = %d milliseconds\n\n", result);
+
+	// 8. Test time to print all events of a fighter when 50,000 records have been added (when m=5 and n1+n2+n...= 50,000)
+	printf("--------------------50,000 records--------------------\n\n");
+
+	read_data(&database, 20000, 50000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 20000, 50000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=5 and n1+n2+n...=50,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=5 and n1+n2+n...=50,000 = %d milliseconds\n\n", result);	
+
+	// 7. Test time to print all events of a fighter when 125,000 records have been added (when m=125 and n1+n2+n...= 125,000)
+	printf("--------------------125,000 records--------------------\n\n");
+
+	read_data(&database, 50000, 125000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 50000, 125000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=12 and n1+n2+n...=125,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=12 and n1+n2+n...=125,000 = %d milliseconds\n\n", result);
+
+	// 8. Test time to print all events of a fighter when 250,000 records have been added (when m=25 and n1+n2+n...= 250,000)
+	printf("--------------------250,000 records--------------------\n\n");
+
+	read_data(&database, 125000, 250000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 125000, 250000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=25 and n1+n2+n...=250,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=25 and n1+n2+n...=250,000 = %d milliseconds\n\n", result);
+
+
+	// 9. Test time to print all events of a fighter when 500,000 records have been added (when m=50 and n1+n2+n...= 500,000)
+	printf("--------------------500,000 records--------------------\n\n");
+
+	read_data(&database, 250000, 500000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 250000, 500000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=50 and n1+n2+n...=500,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=50 and n1+n2+n...=500,000 = %d milliseconds\n\n", result);
+
+	// 10. Test time to print all events of a fighter when 1,000,000 records have been added (when m=100 and n1+n2+n...= 1,000,000)
+	printf("--------------------1,000,000 records--------------------\n\n");
+
+	read_data(&database, 500000, 1000000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 500000, 1000000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=100 and n1+n2+n...=1,000,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=100 and n1+n2+n...=1,000,000 = %d milliseconds\n\n", result);
+
+	// 11. Test time to print all events of a fighter when 2,500,000 records have been added (when m=250 and n1+n2+n...= 2,500,000)
+	printf("--------------------2,500,000 records--------------------\n\n");
+
+	read_data(&database, 1000000, 2500000, LINKED_LIST_LINKED_LIST);
+	read_data(&avl_database, 1000000, 2500000, LINKED_LIST_AVL_TREE);
+
+	result = time_many_to_many(&database, LINKED_LIST_LINKED_LIST);
+	printf("PROTOTYPE 1 - Time when m=250 and n1+n2+n...=2,500,000 = %d milliseconds\n\n", result);
+
+	result = time_many_to_many(&avl_database, LINKED_LIST_AVL_TREE);
+	printf("PROTOTYPE 2 - Time when m=250 and n1+n2+n...=2,500,000 = %d milliseconds\n\n", result);
 
 }

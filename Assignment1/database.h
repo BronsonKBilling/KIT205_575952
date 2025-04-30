@@ -16,3 +16,5 @@ void add_event(List* database, int event_code);
 
 void test_database();
 
+void evaluate_database();
+

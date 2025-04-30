@@ -132,7 +132,7 @@
     <ClCompile Include="linked_list.c" />
     <ClCompile Include="record.c" />
     <ClCompile Include="database.c" />
-    <ClCompile Include="data.txt" />
+    <None Include="data.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avl_tree.h" />

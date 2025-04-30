@@ -38,6 +38,6 @@ int main() {
 	test_list();
     test_avl();
 	test_database();
-
+	//evaluate_database();
 	return 0;
 }
