@@ -1,23 +1,28 @@
-import re
+def generate_ufc_dataset_to_file():
+    from itertools import product, count
+    import string
+    import csv
 
-# Data originally from 'https://www.kaggle.com/datasets/maksbasher/ufc-complete-dataset-all-events-1996-2024?resource=download'
-# Dataset used is the Medium set
+    def generate_unique_names(n):
+        letters = string.ascii_uppercase
+        name_parts = []
+        for length in count(1):
+            for combo in product(letters, repeat=length):
+                name_parts.append(''.join(combo))
+                if len(name_parts) >= n * 2:  # Each full name needs two parts
+                    return [f"{name_parts[i]} {name_parts[i + 1]}" for i in range(0, n * 2, 2)]
 
-def main():
-    dataset = ""
-    new_dataset = ""
-    line_values = []
-    
-    with open("medium_dataset.csv", "r", encoding="utf-8") as file:
-        dataset = file.read()
+    unique_fighters = generate_unique_names(10000)
 
-    for line in dataset.splitlines():
-        line_values = line.split(",")
-        # ChatGPT was used to create the REGEX below
-        if re.search(r'\bUFC\s\d{1,3}\b', line_values[0]):
-            new_dataset = new_dataset + line_values[0].split(":")[0].split("UFC ")[1] + "," + line_values[5] + "\n"
-            new_dataset = new_dataset + line_values[0].split(":")[0].split("UFC ")[1] + "," + line_values[6] + "\n"
-    
-    print(new_dataset)
+    with open("ufc_dataset.csv", "w", newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Event Number", "Fighter Name"])  # Header row
 
-main()
+        for event in range(250, 0, -1):
+            for fighter in unique_fighters:
+                writer.writerow([event, fighter])
+
+    print("Dataset written to ufc_dataset.csv successfully.")
+
+# Call the function
+generate_ufc_dataset_to_file()
