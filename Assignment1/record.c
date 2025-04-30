@@ -13,17 +13,16 @@ Record create_record() {
 	new_record.identifier = NULL;
 	new_record.identifier_type = IT_UNSET;
 	new_record.data = NULL;
-	new_record.data_type = DT_UNSET;
 
 	return new_record;
 }
 
 // Compares two record identifiers. Returns 1 if the first comes after the second, 0 if they are the same, and -1 if the
-// first comes before the second 
-// This function assumes that the identifier types match the identifiers.
+// first comes before the second. This function assumes that the identifier types match the identifiers.
 int compare_records(Record* self, Record* other) {
-	int comparison_result;
+	int comparison_result; // The result of the comparison. Conforms to values above
 
+	// Do error checks
 	if (self->identifier_type != other->identifier_type)
 	{
 		printf("ER1: ERROR! You are comparing two identifiers with different data types.");
@@ -36,7 +35,6 @@ int compare_records(Record* self, Record* other) {
 		return 2;	// This is temporary and is only here to simulate exiting the program during testing
 		// exit(2);
 	}	
-
 	if (self->identifier == NULL || other->identifier == NULL) {
 		printf("ER3: ERROR! One or both identifiers is unset.");
 		return 3;	// This is temporary and is only here to simulate exiting the program during testing
@@ -71,14 +69,14 @@ int compare_records(Record* self, Record* other) {
 // A wrapper function to compare records by inputting a identifier type and identifier, rather than a record
 int compare_record_by_identifier(Record* self, void* identifier, IdentifierType type) {
 	Record dummy_record; // A record used to search for the given identifier
+
 	dummy_record.identifier_type = type;
 	dummy_record.identifier = identifier;
 
 	return compare_records(self, &dummy_record);
 }
 
-// Prints the identifier of a record
-// This function assumes that the identifier types match the identifiers.
+// Prints the identifier of a record. This function assumes that the identifier types match the identifiers.
 void print_record(Record* self) {
 	String format; // The format of the printf function
 
@@ -105,14 +103,15 @@ void print_record(Record* self) {
 }
 
 // Clones a record and returns a pointer to the clone. This function assumes that records with a set identifier type also
-// have a valid identifier of the same type. 
+// have a valid identifier of the same type. Cloning the data of a record is not necessary for the database so is not implemented
+// in this function
 Record* clone_record(Record* self) {
-	Record* clone = malloc(sizeof(Record));
+	Record* clone = malloc(sizeof(Record));  // The new record that is a clone of self
+
 	*clone = create_record();
 
-	// Directly assigning is fine here as these fields aren't pointers, so the compiler will make a copy
+	// Directly assigning is fine here as this field is not a pointer, so the compiler will make a copy
 	clone->identifier_type = self->identifier_type;
-	clone->data_type = self->data_type;
 
 	if (self->identifier != NULL) {
 		if (self->identifier_type == IT_INT) {
@@ -126,14 +125,7 @@ Record* clone_record(Record* self) {
 		} 
 	} 
 
-	if (self->data != NULL) {
-		// if data_type == DT_LIST copy_list() (not implemented yet)
-		// else if data_type == DT_TREE copy_tree() (not implemented yet)
-		// else throw err
-	}
-
 	return clone;
-
 }
 
 // Destroys a record and frees memory. Only used for testing purposes to free up variables and not in the database implementation
@@ -153,6 +145,7 @@ void change_int_identifier(Record* self, int num) {
 	if (self->identifier != NULL ) {
 		free(self->identifier);
 	}
+
 	int* new_int = malloc(sizeof(int));
 	*new_int = num;
 	self->identifier = new_int;
@@ -167,6 +160,7 @@ void change_string_identifier(Record* self, String str) {
 	if (self->identifier != NULL) {
 		free(self->identifier);
 	}
+
 	String new_string = malloc(strlen(str) + 1);
 	strcpy_s(new_string, strlen(str) + 1, str);
 	self->identifier = new_string;
@@ -193,6 +187,7 @@ void test_record() {
 	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
 	// true. Any false values are considered a failed test.
 
+	printf("\n------------------------------------------------------\n                  *record.c tests*\n");
 
 	// 1 - Test 'create_record()'
 	printf("----------------\n1. create_record() test\n----------------\n");
@@ -368,7 +363,7 @@ void test_record() {
 	// been implemented
 
 	// 5 - Test change_int_identifier()
-	printf("\n----------------\n5. change_int_identifier() test\n----------------\n");
+	printf("----------------\n5. change_int_identifier() test\n----------------\n");
 
 	// 5.1 - Test changing the identifier when the identifier is currently NULL (bypassing the 'if' statement)
 
@@ -377,7 +372,7 @@ void test_record() {
 	testing_record.identifier = NULL;
 	change_int_identifier(&testing_record, 2);
 
-	printf("\n5.1 - Expected Result: 2\n5.1 - Actual Result: ");
+	printf("5.1 - Expected Result: 2\n5.1 - Actual Result: ");
 	print_record(&testing_record);
 	// If '2' was directly assigned to testing_record.identifier, the memory location would equal 2, rather than it
 	// pointing to an int that equals 2.
@@ -400,7 +395,7 @@ void test_record() {
 	testing_record.identifier = NULL;
 	change_string_identifier(&testing_record, "hello");
 
-	printf("\n6.1 - Expected Result: hello\n6.1 - Actual Result: ");
+	printf("6.1 - Expected Result: hello\n6.1 - Actual Result: ");
 	print_record(&testing_record);
 	// If 'hello' was directly assigned to testing_record.identifier, the memory location would store a string literal
 	// rather than it pointing to a string.

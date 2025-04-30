@@ -15,7 +15,9 @@
 
 // Adds an event to the a database
 void add_event(List* database, int event_code) {
-	Record* new_event = malloc(sizeof(Record));
+	Record* new_event = malloc(sizeof(Record)); // The new event to add to the database
+
+	// Create event
 	*new_event = create_record();
 	new_event->identifier_type = IT_INT;
 	change_int_identifier(new_event, event_code);
@@ -25,7 +27,7 @@ void add_event(List* database, int event_code) {
 
 // Adds a fighter to an event in a prototype 1 database
 void add_fighter_list(List* database, Record* event, Record* fighter) {
-	List* new_list;								// Variable that holds the new list to be put into the event's data field, if the event's data is NULL
+	List* new_list;	// Variable that holds the new list to be put into the event's data field, if the event's data is NULL
 
 	// If there are no other fighters in the list
 	if (event->data == NULL) {
@@ -33,12 +35,13 @@ void add_fighter_list(List* database, Record* event, Record* fighter) {
 		*new_list = create_list();
 		event->data = new_list;
 	}
+
 	insert_list(event->data, fighter);
 }
 
 // Adds a fighter to an event in a prototype 2 database
 void add_fighter_avl(List* database, Record* event, Record* fighter) {
-	AVL* new_avl;								// Variable that holds the new avl to be put into the event's data field, if the event's data is NULL
+	AVL* new_avl; // Variable that holds the new avl to be put into the event's data field, if the event's data is NULL
 
 	// If there are no other fighters in the tree
 	if (event->data == NULL) {
@@ -46,8 +49,8 @@ void add_fighter_avl(List* database, Record* event, Record* fighter) {
 		*new_avl = create_avl();
 		event->data = new_avl;
 	}
+
 	insert_avl(event->data, fighter);
-	
 }
 
 // Adds a fighter to an event. Function assumes that all parameters are valid
@@ -102,9 +105,9 @@ void print_fighters_in_event(List* database, int event_code, Prototype prototype
 }
 
 // Prints all of the events that a fighter has fought in, when the fighters are stored in an linked list (prototype 1)
-// This funciton assumes that the database has at least 1 event
+// This function assumes that the database has at least 1 event
 void print_events_of_fighter_list(List* database, String fighter_name) {
-	ListNodePtr current = database->head;
+	ListNodePtr current = database->head; // The node currently being iterated over
 
 	while (current != NULL) {
 		if (current->data->data != NULL && find_list(current->data->data, fighter_name, IT_STRING) != NULL) {
@@ -116,10 +119,10 @@ void print_events_of_fighter_list(List* database, String fighter_name) {
 }
 
 // Prints all of the events that a fighter has fought in, when the fighters are stored in an AVL (prototype 2)
-// This funciton assumes that the database has at least 1 event
+// This function assumes that the database has at least 1 event
 void print_events_of_fighter_avl(List* database, String fighter_name) {
-	ListNodePtr current = database->head;
-
+	ListNodePtr current = database->head; // The node currently being iterated over
+	 
 	while (current != NULL) {
 		if (current->data->data != NULL && find_avl(current->data->data, fighter_name) != NULL) {
 			print_record(current->data);
@@ -190,9 +193,9 @@ void read_data(List* database, int start, int end, Prototype prototype) {
 // Times the many to many function for a given database and returns the time in milliseconds. Function is derived
 // from week 4 tutorial
 long time_many_to_many(List* database, Prototype prototype) {
-	clock_t start;
-	clock_t difference;
-	long milliseconds;
+	clock_t start;		// The starting time
+	clock_t difference; // The time between the start and the end
+	long milliseconds;  // How long in milliseconds the difference is
 
 	start = clock();
 	print_events_of_fighter(database, "AA AA", prototype);
@@ -222,7 +225,7 @@ void test_database() {
 	List avl_database = create_list();
 	ListNodePtr node_to_delete;
 
-	printf("------------------------------------------------------\n                    database.c tests\n");
+	printf("\n------------------------------------------------------\n                  *database.c tests*\n");
 
 	// 1 - Test 'add_event()'
 	printf("----------------\n1. add_event() test\n----------------\n");
@@ -244,7 +247,7 @@ void test_database() {
 
 	// 2.1 - Tests error detection when attempting to add a fighter to an event that does not exist. Triggers the first
 	//		 if statement
-	printf("\n2.1 - Expected value: ERR4\n2.1 - Actual value: \n");
+	printf("\n2.1 - Expected value: ERR4\n2.1 - Actual value: ");
 	add_fighter_to_event(&database, 5, "John Fighter", LINKED_LIST_LINKED_LIST);
 
 	// 2.2 - Tests insertion when the prototype is LINKED_LIST_LINKED_LIST (prototype 1). Tests the first if else statement
@@ -329,25 +332,25 @@ void test_database() {
 	printf("----------------\n7. print_events_of_fighter_list() test\n----------------\n");
 
 	// 7.1 - Test when the fighter is in no events
-	printf("7.1 - Expected value: [fighter] has fought in the following events: \n7.1 - Actual value: ");
+	printf("7.1 - Expected value: \n7.1 - Actual value: ");
 	print_events_of_fighter_list(&database, "Jimmy Fighter");
 
 	// 7.2 - Test when the fighter has fought in events
 	//add_fighter_to_event(&database, 2, "John Fighter", LINKED_LIST_LINKED_LIST);
 
-	printf("7.2 - Expected value: [fighter] has fought in the following events:\n1\n2\n7.2 - Actual value: ");
+	printf("\n7.2 - Expected value:\n1\n2\n7.2 - Actual value:\n");
 	print_events_of_fighter_list(&database, "John Fighter");
 
 	// 8 - Test 'print_events_of_fighter_avl()'
 	printf("----------------\n8. print_events_of_fighter_avl() test\n----------------\n");
 
 	// 8.1 - Test when the fighter is in no events
-	printf("8.1 - Expected value: [fighter] has fought in the following events: \n8.1 - Actual value: ");
+	printf("8.1 - Expected value: \n8.1 - Actual value: ");
 	print_events_of_fighter_avl(&avl_database, "Jimmy Fighter");
 
 	// 8.2 - Test when the fighter has fought in events
 
-	printf("8.2 - Expected value: [fighter] has fought in the following events:\n1\n2\n8.2 - Actual value: ");
+	printf("\n8.2 - Expected value:\n1\n2\n8.2 - Actual value:\n");
 	print_events_of_fighter_avl(&avl_database, "John Fighter");
 
 	// 9 - Test 'print_events_of_fighter_avl()'
@@ -390,7 +393,7 @@ void test_database() {
 	//		  tests the if statement within the final for loop
 	read_data(&empty_database, 9999, 10002, LINKED_LIST_LINKED_LIST);
 
-	printf("10.3 - Expected value:\n250\n249\n10.3 - Actual value: ");
+	printf("10.3 - Expected value:\n250\n249\n10.3 - Actual value:\n");
 	print_events(&empty_database);
 	printf("10.3 - Expected value: \nA B\nC D\n10.3 - Actual value:\n");
 	print_fighters_in_event(&empty_database, 249, LINKED_LIST_LINKED_LIST);
@@ -405,7 +408,7 @@ void test_database() {
 }
 
 // Evaluates the most time sensitive function of this database file (print_events_of_fighter) for both prototypes using
-// testing data. This entire function took over 6 minutes to complete on a high powered PC.
+// testing data. This entire function took over 9 minutes to complete on a high powered PC.
 void evaluate_database() {
 	List database = create_list();
 	List avl_database = create_list();
@@ -414,7 +417,7 @@ void evaluate_database() {
 	// The two values of note are m (the number of events) and n (the number of fighters within an event) each test will 
 	// deal with increasing amounts of both
 
-	printf("------------------------------------------------------\n              Database evaluation tests");
+	printf("\n------------------------------------------------------\n             *Database evaluation tests*");
 	printf("\nWARNING: These tests took more than 9 minutes to complete\n       on a high end PC. Storing 2.5M records also\n");
 	printf("             uses multiple GB of memory\n------------------------------------------------------\n");
 

@@ -52,9 +52,9 @@ void find_left_right_height(AVLNodePtr self, int* left, int* right) {
 // Finds the height of an AVL node. Although nodes have a height field, it is necessary to have this function as the
 // height field will not be correct after rotating
 int get_avl_node_height(AVLNodePtr self) {
-	int left_height;
-	int right_height;
-	int height;
+	int left_height;	// The height of the left subtree
+	int right_height;	// The height of the right subtree
+	int height;		    // The height of self
 
 	if (self == NULL) {
 		height = -1;
@@ -87,7 +87,7 @@ AVLNodePtr left_rotate(AVLNodePtr self) {
 	// Self becomes the left child of self->right
 	// The reference of the right_child is returned to become the new reference of self
 
-	AVLNodePtr right_child = self->right; // Used so the right child is not lost when rotating
+	AVLNodePtr right_child = self->right; // Right child of self. Used so the right child is not lost when rotating
 
 	// Rotate
 	self->right = right_child->left;
@@ -107,7 +107,7 @@ AVLNodePtr right_rotate(AVLNodePtr self) {
 	// Self becomes the right child of self->left
 	// The reference of the left_child is returned to become the new reference of self
 
-	AVLNodePtr left_child = self->left; // Used so the left child is not lost when rotating
+	AVLNodePtr left_child = self->left; // Left child of self. Used so the left child is not lost when rotating
 
 	// Rotate
 	self->left = left_child->right;
@@ -127,13 +127,13 @@ AVLNodePtr balance_tree(AVLNodePtr self) {
 	int leftHeight;  // The height of the left subtree
 	int rightHeight; // The height of the right subtree
 	bool left_initial_imbalance; // Whether or not self is imbalanced to the left or not
-	ImbalanceType imbalance;
-	AVLNodePtr updated_root = self;
+	ImbalanceType imbalance;	 // The type of imbalance
+	AVLNodePtr updated_root = self; // The new root node
 
 	// get left and right heights
 	find_left_right_height(self, &leftHeight, &rightHeight);
 
-	// Assess imbalance
+	// Assess first imbalance
 	if (leftHeight - rightHeight > 0) {
 		left_initial_imbalance = true;
 	}
@@ -141,6 +141,7 @@ AVLNodePtr balance_tree(AVLNodePtr self) {
 		left_initial_imbalance = false;
 	}
 
+	// Assess the imbalance
 	if (left_initial_imbalance) {
 		find_left_right_height(self->left, &leftHeight, &rightHeight);
 		if (leftHeight - rightHeight > 0) {
@@ -288,12 +289,12 @@ void delete_avl_children(AVL* self) {
 
 // Tests all functions within the avl_tree.c file
 void test_avl() {
-	AVL test_tree;
-	AVL empty_tree = create_avl();
-	Record testing_record = create_record();
-	int leftHeight;
-	int rightHeight;
-	AVLNodePtr result;
+	AVL test_tree;	// The tree to use for testing
+	AVL empty_tree = create_avl();	// An empty tree to use for testing
+	Record testing_record = create_record(); // A record to use for testing
+	int leftHeight;	 // A variable that will be used to test if functions can get the left height accurately
+	int rightHeight; // A variable that will be used to test if functions can get the left height accurately
+	AVLNodePtr result; // The result of a search test
 
 	// Note about testing wrappers: Functions such as find_avl_node and other wrapped private functions will be tested 
 	// by calling their wrapper functions. This is for convenience and for simplicity. As the wrapper functions simply
@@ -318,6 +319,8 @@ void test_avl() {
 	// This is still able to test all execution paths of the function without the added complexity of having to manually
 	// insert nodes. All execution paths of insert_avl_node will still be tested despite them being executed while testing
 	// balance_tree
+
+	printf("\n------------------------------------------------------\n                  *avl_tree.c tests*\n");
 
 	// ----------------------------------------------------------------------------------------------------------------
 	// 1 - Test 'create_avl()'
@@ -393,13 +396,13 @@ void test_avl() {
 	// Finds the left and right heights of the node containing "Rachel", this node is a leaf
 	find_left_right_height(test_tree.root->right->left, &leftHeight, &rightHeight);
 
-	printf("\n3.1 - Expected values: -1, -1\n3.1 - Actual values: ");
+	printf("3.1 - Expected values: -1, -1\n3.1 - Actual values: ");
 	printf("%d, %d\n", leftHeight, rightHeight);
 
 	// 3.2 - Tests when both children have a height. This tests the first and second else statements
 	find_left_right_height(test_tree.root, &leftHeight, &rightHeight);
 
-	printf("\n3.2 - Expected values: 1, 1\n3.2 - Actual values: ");
+	printf("3.2 - Expected values: 1, 1\n3.2 - Actual values: ");
 	printf("%d, %d\n", leftHeight, rightHeight);
 
 	// ----------------------------------------------------------------------------------------------------------------

@@ -8,15 +8,18 @@
 
 // Creates and returns a new list
 List create_list() {
-	List new_list;
+	List new_list; // The newly created list
+
 	new_list.head = NULL;
 	new_list.tail = NULL;
+
 	return new_list;
 }
 
 // Creates and returns a new list node pointer
 ListNodePtr create_node() {
-	ListNodePtr new_node = malloc(sizeof * new_node);
+	ListNodePtr new_node = malloc(sizeof * new_node); // The newly created node
+
 	new_node->data = NULL;
 	new_node->next = NULL;
 	new_node->prev = NULL;
@@ -26,8 +29,8 @@ ListNodePtr create_node() {
 
 // Inserts a record at the head of the list
 void insert_at_front(List* self, Record* data) {
-	ListNodePtr new_node = create_node();
-	Record* new_record = clone_record(data);
+	ListNodePtr new_node = create_node();	  // The new node to insert
+	Record* new_record = clone_record(data);  // The newly cloned record to insert into the new node
 
 	new_node->data = new_record;
 
@@ -46,11 +49,12 @@ void insert_at_front(List* self, Record* data) {
 
 // Inserts a record at the tail of the list
 void insert_at_rear(List* self, Record* data) {
-	ListNodePtr new_node = create_node();
-	Record* new_record = clone_record(data);
+	ListNodePtr new_node = create_node();	  // The new node to insert
+	Record* new_record = clone_record(data);  // The newly cloned record to insert into the new node
 
 	new_node->data = new_record;
 
+	// If the list is empty then the tail and head should both be equal to the new node
 	if (self->tail != NULL) {
 		self->tail->next = new_node;
 	}
@@ -67,10 +71,10 @@ void insert_at_rear(List* self, Record* data) {
 // has at least 2 records within it. This function will only ever be called when the list has at least 2 elements.
 // The function also assumes that items are sorted in ascending order.
 void insert_at_middle_from_front(List* self, Record* data) {
-	ListNodePtr new_node = create_node();
-	Record* new_record = clone_record(data);
-	ListNodePtr current = self->head;
-	ListNodePtr previous = NULL;
+	ListNodePtr new_node = create_node();	  // The new node to insert
+	Record* new_record = clone_record(data);  // The newly cloned record to insert into the new node
+	ListNodePtr current = self->head;	      // The node currently being iterated over
+	ListNodePtr previous = NULL;			  // The node that was previously iterated over
 
 	new_node->data = new_record;
 
@@ -91,10 +95,10 @@ void insert_at_middle_from_front(List* self, Record* data) {
 // has at least 2 records within it. This function will only ever be called when the list has at least 2 elements.
 // The function also assumes that items are sorted in ascending order.
 void insert_at_middle_from_rear(List* self, Record* data) {
-	ListNodePtr new_node = create_node();
-	Record* new_record = clone_record(data);
-	ListNodePtr current = self->tail;
-	ListNodePtr next = NULL;
+	ListNodePtr new_node = create_node();	  // The new node to insert
+	Record* new_record = clone_record(data);  // The newly cloned record to insert into the new node
+	ListNodePtr current = self->tail;	      // The node currently being iterated over
+	ListNodePtr next = NULL;				  // The node that was previously iterated over, but which is after the current in the list
 
 	new_node->data = new_record;
 
@@ -164,9 +168,10 @@ void print_list(List* self) {
 	}
 }
 
+// Finds and returns a node that contains a record with the given identifier. Searches from the front of the linked list.
 ListNodePtr find_list_from_front(List* self, void* identifier, IdentifierType type) {
-	ListNodePtr result = NULL;
-	ListNodePtr current = self->head;
+	ListNodePtr result = NULL;		   // The node with a record that matches the given identifier and type
+	ListNodePtr current = self->head;  // The node currently being iterated over
 
 	while (current != NULL && result == NULL) {
 		if (compare_record_by_identifier(current->data, identifier, type) == 0) {
@@ -180,9 +185,10 @@ ListNodePtr find_list_from_front(List* self, void* identifier, IdentifierType ty
 	return result;
 }
 
+// Finds and returns a node that contains a record with the given identifier. Searches from the rear of the linked list
 ListNodePtr find_list_from_rear(List* self, void* identifier, IdentifierType type) {
-	ListNodePtr result = NULL;
-	ListNodePtr current = self->tail;
+	ListNodePtr result = NULL;			// The node with a record that matches the given identifier and type
+	ListNodePtr current = self->tail;   // The node currently being iterated over
 
 	while (current != NULL && result == NULL) {
 		if (compare_record_by_identifier(current->data, identifier, type) == 0) {
@@ -199,7 +205,8 @@ ListNodePtr find_list_from_rear(List* self, void* identifier, IdentifierType typ
 // Returns a pointer to a list node containing a record with the given identifier. This function assumes that the
 // list is not empty
 ListNodePtr find_list(List* self, void* identifier, IdentifierType type) {
-	ListNodePtr result;
+	ListNodePtr result;	// The node with a record that matches the given identifier and type
+
 	if (type == IT_INT  && *(int*)self->tail->data->identifier / 2 < identifier) {
 		result = find_list_from_rear(self, identifier, type);
 	}
@@ -230,6 +237,8 @@ void test_list() {
 
 	// Note about tests that return true or false: For a test to pass (exhibit intended behaviour) the result must be
 	// true. Any false values are considered a failed test.
+
+	printf("\n------------------------------------------------------\n               *linked_list.c tests*\n");
 
 	// 1 - Test 'create_list()'
 	printf("----------------\n1. create_list() test\n----------------\n");
