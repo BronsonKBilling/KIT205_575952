@@ -217,15 +217,11 @@ AVLNodePtr insert_avl_node(AVLNodePtr self, Record* data) {
 	}
 	else if (compare_records(copied_record, self->data) == -1) {
 		self->left = insert_avl_node(self->left, copied_record);
-		int lh = self->left ? self->left->height : -1;
-		int rh = self->right ? self->right->height : -1;
-		self->height = (lh > rh ? lh : rh) + 1;
+		self->height = get_height_non_recursively(self);
 	}
 	else if (compare_records(copied_record, self->data) == 1) {
 		self->right = insert_avl_node(self->right, copied_record);
-		int lh = self->left ? self->left->height : -1;
-		int rh = self->right ? self->right->height : -1;
-		self->height = (lh > rh ? lh : rh) + 1;
+		self->height = get_height_non_recursively(self);
 	}
 	
 	// get left and right heights
