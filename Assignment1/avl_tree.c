@@ -80,6 +80,23 @@ int get_avl_node_height(AVLNodePtr self) {
 	return height;
 }
 
+// Gets the height of an avl tree node non recursively. Appropriate when inserting but not when rotating
+// This function was adapted from code written by ChatGPT
+int get_height_non_recursively(AVLNodePtr self) {
+	int leftHeight;	 // The height of the left subtree
+	int rightHeight; // The height of the right subtree
+	if (self == NULL) {
+		leftHeight = -2;
+		rightHeight = -2;
+	}
+	else {
+		leftHeight = self->left ? self->left->height : -1;
+		rightHeight = self->right ? self->right->height : -1;
+	}
+	
+	return (leftHeight > rightHeight ? leftHeight : rightHeight) + 1;
+}
+
 // Performs a left rotation. This function assumes that self and its right child are not null. This function will
 // never be called unless these conditions are met as a left rotation would not be required.
 AVLNodePtr left_rotate(AVLNodePtr self) {
@@ -200,11 +217,15 @@ AVLNodePtr insert_avl_node(AVLNodePtr self, Record* data) {
 	}
 	else if (compare_records(copied_record, self->data) == -1) {
 		self->left = insert_avl_node(self->left, copied_record);
-		self->height = get_avl_node_height(self);
+		int lh = self->left ? self->left->height : -1;
+		int rh = self->right ? self->right->height : -1;
+		self->height = (lh > rh ? lh : rh) + 1;
 	}
 	else if (compare_records(copied_record, self->data) == 1) {
 		self->right = insert_avl_node(self->right, copied_record);
-		self->height = get_avl_node_height(self);
+		int lh = self->left ? self->left->height : -1;
+		int rh = self->right ? self->right->height : -1;
+		self->height = (lh > rh ? lh : rh) + 1;
 	}
 	
 	// get left and right heights
@@ -648,5 +669,21 @@ void test_avl() {
 	printf("\n8.5 - Expected result: (((_Kyle_)Laine(_Lyra_))Peta(_Valerie_))\n8.5 - Actual result: ");
 	print_avl(&test_tree);
 
+	// ----------------------------------------------------------------------------------------------------------------
+	// 9 - Test 'get_height_non_recursively()'
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n9. get_height_non_recursively() tests\n----------------");
+
+	// 9.1 - Test retrieving the height of a node leaf node
+	printf("\n9.1 - Expected result: 0\n9.1 - Actual result: ");
+	printf("%d", get_height_non_recursively(find_avl(&test_tree, "Valerie")));
+
+	// 9.2 - Test retrieving the height of a null node
+	printf("\n9.2 - Expected result: -1\n9.2 - Actual result: ");
+	printf("%d", get_height_non_recursively(NULL));
+
+	// 9.3 - Test retrieving the height of a node with valid subtrees
+	printf("\n9.3 - Expected result: 2\n9.3 - Actual result: ");
+	printf("%d", get_height_non_recursively(find_avl(&test_tree, "Peta")));
 
 }

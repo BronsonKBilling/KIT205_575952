@@ -189,14 +189,18 @@ void test_record() {
 
 	printf("\n------------------------------------------------------\n                  *record.c tests*\n");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 1 - Test 'create_record()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n1. create_record() test\n----------------\n");
 
 	// 1.1 - Tests if the function can create and return a record without throwing any errors
 	testing_record = create_record();
 	printf("1.1 - Test passed! Record successfully created!\n");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 2 - Test 'compare_records()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n2. compare_records() test\n----------------\n");
 
 	// 2.1 - Test behaviour when the identifier types do not match. This should exit the program with an error message
@@ -271,7 +275,9 @@ void test_record() {
 	printf("\n2.10 - Expected Result: 0\n2.10 - Actual Result: ");
 	printf("%d", result);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 3 - Test print_record()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("\n----------------\n3. print_record() test\n----------------\n");
 
 	// 3.1 - Tests when the identifier type is unset. Should print error message and exit program. It does not exit the
@@ -298,7 +304,9 @@ void test_record() {
 	printf("\n3.4 - Expected Result: 40\n3.4 - Actual Result: ");
 	print_record(&testing_record);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 4 - Test clone_record()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("\n----------------\n4. clone_record() test\n----------------\n");
 
 	// 4.1 - Test cloning an default record
@@ -362,7 +370,9 @@ void test_record() {
 	// Logic based on the 'data' field of a record cannot be tested completely until prototype 2 data structures have
 	// been implemented
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 5 - Test change_int_identifier()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n5. change_int_identifier() test\n----------------\n");
 
 	// 5.1 - Test changing the identifier when the identifier is currently NULL (bypassing the 'if' statement)
@@ -385,7 +395,9 @@ void test_record() {
 	printf("\n5.2 - Expected Result: 3\n5.2 - Actual Result: ");
 	print_record(&testing_record);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 6 - Test change_string_identifier()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("\n----------------\n6. change_string_identifier() test\n----------------\n");
 
 	// 6.1 - Test changing the identifier when the identifier is currently NULL (bypassing the 'if' statement)

@@ -149,7 +149,7 @@ void print_events_of_fighter(List* database, String fighter_name, Prototype prot
 // File reading code is derivative of week 9 tutorial
 // This funciton assumes that the file lines being read have not been added to the database yet
 void read_data(List* database, int start, int end, Prototype prototype) {
-	FILE* file = fopen("ufc_dataset.csv", "r"); // The file containing all records
+	FILE* file = fopen("ufc_dataset_100k.csv", "r"); // The file containing all records
 	int event;				   // The event currently being iterated over in the file
 	int most_recent_event = 0; // The event of the fighter that was added most recently. Defaults to 0 to enable comparisons before needing to assign
 	char line[15];		       // Temporarily stores line of text, maximum length is 13 characters + terminator and \n
@@ -227,7 +227,9 @@ void test_database() {
 
 	printf("\n------------------------------------------------------\n                  *database.c tests*\n");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 1 - Test 'add_event()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n1. add_event() test\n----------------\n");
 
 	// 1.1 - Tests if an event can be successfully created and placed into an empty database
@@ -242,7 +244,9 @@ void test_database() {
 	printf("1.2 - Expected value: \n1\n2\n1.2 - Actual value: \n");
 	print_list(&database);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 2 - Test 'add_fighter_to_event()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n2. add_fighter_to_event() test\n----------------");
 
 	// 2.1 - Tests error detection when attempting to add a fighter to an event that does not exist. Triggers the first
@@ -263,7 +267,9 @@ void test_database() {
 	printf("2.3 - Expected value: John Fighter\n2.3 - Actual value: ");
 	print_avl_without_tree(avl_database.head->data->data);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 3 - Test 'add_fighter_list()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n3. add_fighter_list() test\n----------------\n");
 
 	// 3.1 - Test insertion when there are no fighters in the list. This tests the if statement
@@ -280,7 +286,9 @@ void test_database() {
 	// This accesses record 2
 	print_list(database.head->next->data->data);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 4 - Test 'add_fighter_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n4. add_fighter_avl() test\n----------------\n");
 
 	// 4.1 - Test insertion when there are no fighters in the tree. This tests the if statement
@@ -298,7 +306,9 @@ void test_database() {
 	// This accesses record 2
 	print_avl_without_tree(avl_database.head->next->data->data);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 5 - Test 'print_events()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n5. print_events() test\n----------------\n");
 
 	// 5.1 - Test error detection when database has no elements
@@ -311,7 +321,9 @@ void test_database() {
 	printf("\n5.2 - Expected value:\n1\n2\n5.2 - Actual value:\n");
 	print_events(&database);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 6 - Test 'print_fighters_in_event()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n6. print_fighters_in_event() test\n----------------\n");
 
 	// 6.1 - Test when the event has no fighters. This triggers the first if statement
@@ -328,7 +340,9 @@ void test_database() {
 	printf("6.3 - Expected value: John Fighter\n6.3 - Actual value: ");
 	print_fighters_in_event(&avl_database, 1, LINKED_LIST_AVL_TREE);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 7 - Test 'print_events_of_fighter_list()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n7. print_events_of_fighter_list() test\n----------------\n");
 
 	// 7.1 - Test when the fighter is in no events
@@ -341,7 +355,9 @@ void test_database() {
 	printf("\n7.2 - Expected value:\n1\n2\n7.2 - Actual value:\n");
 	print_events_of_fighter_list(&database, "John Fighter");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 8 - Test 'print_events_of_fighter_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n8. print_events_of_fighter_avl() test\n----------------\n");
 
 	// 8.1 - Test when the fighter is in no events
@@ -353,7 +369,9 @@ void test_database() {
 	printf("\n8.2 - Expected value:\n1\n2\n8.2 - Actual value:\n");
 	print_events_of_fighter_avl(&avl_database, "John Fighter");
 
-	// 9 - Test 'print_events_of_fighter_avl()'
+	// ----------------------------------------------------------------------------------------------------------------
+	// 9 - Test 'print_events_of_fighter()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n9. print_events_of_fighter() test\n----------------\n");
 
 	// 9.1 - Test when the database is empty. Tests if statement
@@ -368,6 +386,9 @@ void test_database() {
 	printf("9.3 - Expected value:\n1\n2\n9.3 - Actual value:\n");
 	print_events_of_fighter(&avl_database, "John Fighter", LINKED_LIST_AVL_TREE);
 
+	// ----------------------------------------------------------------------------------------------------------------
+	// 10 - Test 'read_data()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n10. read_data() test\n----------------\n");
 
 	// 10.1 - Test adding data to an empty database. This will trigger the 'if' statement within the final for loop of the 
@@ -391,13 +412,16 @@ void test_database() {
 
 	// 10.3 - Test adding data to a database where the event number changes during the function's execution. This further 
 	//		  tests the if statement within the final for loop
-	read_data(&empty_database, 9999, 10002, LINKED_LIST_LINKED_LIST);
+	read_data(&empty_database, 99999, 100002, LINKED_LIST_LINKED_LIST);
 
 	printf("10.3 - Expected value:\n250\n249\n10.3 - Actual value:\n");
 	print_events(&empty_database);
 	printf("10.3 - Expected value: \nA B\nC D\n10.3 - Actual value:\n");
 	print_fighters_in_event(&empty_database, 249, LINKED_LIST_LINKED_LIST);
 
+	// ----------------------------------------------------------------------------------------------------------------
+	// 11 - Test 'time_many_to_many()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n11. time_many_to_many() test\n----------------\n");
 
 	// 11.1 - Tests the function and whether it can time the execution of print_events_of_fighter(). This function has

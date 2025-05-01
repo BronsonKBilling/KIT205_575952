@@ -240,14 +240,18 @@ void test_list() {
 
 	printf("\n------------------------------------------------------\n               *linked_list.c tests*\n");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 1 - Test 'create_list()'
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n1. create_list() test\n----------------\n");
 
 	// 1.1 - Tests if the function can create and return a linked list without throwing any errors
 	testing_list = create_list();
 	printf("1.1 - Test passed! List successfully created!\n");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 2 - Test insert_at_front()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n2. insert_at_front() test\n----------------\n");
 
 	// 2.1 - Tests insertion at front when there are no elements in the list, tests the 'else' statement
@@ -273,7 +277,9 @@ void test_list() {
 	printf("2.2 - head == tail? ");
 	printf("%s\n", testing_list.head == testing_list.tail ? "true" : "false");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 3 - Test delete_node()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n3. delete_node() test\n----------------\n");
 
 	// 3.1 - Test deletion of element that is not the head or tail of the list, this avoids both if statements at the beginning of the
@@ -320,7 +326,9 @@ void test_list() {
 	printf("3.4 - Head and tail are equal to NULL? ");
 	printf("%s\n", testing_list.head == NULL && testing_list.tail == NULL ? "true" : "false");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 4 - Test insert_at_rear()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n4. insert_at_rear() test\n----------------\n");
 
 	// 4.1 - Tests insertion at rear when there are no elements in the list. Tests the else statement
@@ -349,7 +357,9 @@ void test_list() {
 	printf("4.2 - head == tail? ");
 	printf("%s\n", testing_list.head == testing_list.tail ? "true" : "false");
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 5 - Test insert_at_middle_from_front()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n5. insert_at_middle_from_front() test\n----------------\n");
 
 	// 5.1 - Test inserting a node. Testing insertion when the list is empty or has less than 2 elements is not necessary
@@ -368,7 +378,9 @@ void test_list() {
 	printf("5.1 - Expected Result:\n1\n2\n4\n5.1 - Actual Result:\n");
 	print_list(&testing_list);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 6 - Test insert_at_middle_from_front()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n6. insert_at_middle_from_rear() test\n----------------\n");
 
 	// 6.1 - Test inserting a node. Testing insertion when the list is empty or has less than 2 elements is not necessary
@@ -380,7 +392,9 @@ void test_list() {
 	printf("6.1 - Expected Result:\n1\n2\n3\n4\n6.1 - Actual Result:\n");
 	print_list(&testing_list);
 
+	// ----------------------------------------------------------------------------------------------------------------
 	// 7 - Test insert_list()
+	// ----------------------------------------------------------------------------------------------------------------
 	printf("----------------\n7. insert_list() test\n----------------\n");
 
 	// 7.1 - Test inserting when the list is empty. This tests the first if statement as self->head == NULL
