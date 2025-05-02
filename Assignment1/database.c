@@ -149,7 +149,7 @@ void print_events_of_fighter(List* database, String fighter_name, Prototype prot
 // File reading code is derivative of week 9 tutorial
 // This funciton assumes that the file lines being read have not been added to the database yet
 void read_data(List* database, int start, int end, Prototype prototype) {
-	FILE* file = fopen("ufc_dataset_100k.csv", "r"); // The file containing all records
+	FILE* file = fopen("ufc_dataset_10k.csv", "r"); // The file containing all records
 	int event;				   // The event currently being iterated over in the file
 	int most_recent_event = 0; // The event of the fighter that was added most recently. Defaults to 0 to enable comparisons before needing to assign
 	char line[15];		       // Temporarily stores line of text, maximum length is 13 characters + terminator and \n
@@ -412,9 +412,9 @@ void test_database() {
 
 	// 10.3 - Test adding data to a database where the event number changes during the function's execution. This further 
 	//		  tests the if statement within the final for loop
-	read_data(&empty_database, 99999, 100002, LINKED_LIST_LINKED_LIST);
+	read_data(&empty_database, 9999, 10002, LINKED_LIST_LINKED_LIST);
 
-	printf("10.3 - Expected value:\n250\n249\n10.3 - Actual value:\n");
+	printf("10.3 - Expected value:\n249\n250\n10.3 - Actual value:\n");
 	print_events(&empty_database);
 	printf("10.3 - Expected value: \nA B\nC D\n10.3 - Actual value:\n");
 	print_fighters_in_event(&empty_database, 249, LINKED_LIST_LINKED_LIST);
@@ -432,7 +432,7 @@ void test_database() {
 }
 
 // Evaluates the most time sensitive function of this database file (print_events_of_fighter) for both prototypes using
-// testing data. This entire function took over 9 minutes to complete on a high powered PC.
+// testing data.
 void evaluate_database() {
 	List database = create_list();
 	List avl_database = create_list();
@@ -442,8 +442,7 @@ void evaluate_database() {
 	// deal with increasing amounts of both
 
 	printf("\n------------------------------------------------------\n             *Database evaluation tests*");
-	printf("\nWARNING: These tests took more than 9 minutes to complete\n       on a high end PC. Storing 2.5M records also\n");
-	printf("             uses multiple GB of memory\n------------------------------------------------------\n");
+	printf("\n------------------------------------------------------\n");
 
 	// 1. Test time to print all events of a fighter when 10 records have been added (when m=1 and n1 = 10)
 	printf("--------------------10 records--------------------\n\n");

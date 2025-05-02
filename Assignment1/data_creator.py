@@ -41,15 +41,15 @@ def generate_ufc_dataset_to_file_100k():
         gen = name_generator()
         return [f"{first} {last}" for first, last in zip(islice(gen, n), islice(gen, n, 2*n))]
 
-    num_events = 25
-    num_fighters = 100_000
-    starting_event = 250
+    num_events = 25000
+    num_fighters = 100
+    starting_event = 25000
 
     print("Generating fighter names...")
     unique_fighters = generate_unique_names(num_fighters)
     print(f"Generated {len(unique_fighters)} unique fighters.")
 
-    with open("ufc_dataset_100k.csv", "w", newline='') as csvfile:
+    with open("ufc_dataset_100.csv", "w", newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Event Number", "Fighter Name"])  # Header row
 
@@ -58,7 +58,7 @@ def generate_ufc_dataset_to_file_100k():
             for fighter in unique_fighters:
                 writer.writerow([event, fighter])
 
-    print("Dataset written to ufc_dataset_100k.csv successfully.")
+    print("Dataset written to ufc_dataset_100.csv successfully.")
 
 # Call the function
 generate_ufc_dataset_to_file_100k()

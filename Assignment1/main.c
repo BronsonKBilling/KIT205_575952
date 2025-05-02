@@ -4,10 +4,10 @@
 #include "database.h"
 
 int main() {
-	//test_record();
-	//test_list();
+	test_record();
+	test_list();
     test_avl();
-	//test_database();
+	test_database();
 	evaluate_database();
 	return 0;
 }
