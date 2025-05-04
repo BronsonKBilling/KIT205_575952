@@ -153,12 +153,6 @@ int main() {
 	printf("In degrees of vertex 5567: %d\n", in_degrees[5567]);
 	fclose(file);
 
-	// De-allocate memory
-	for (int i = 0; i < G.V; i++)
-	{
-		G.edges[i].head = NULL;
-	}
-
 	test_graph();
 	return 0;
 }
