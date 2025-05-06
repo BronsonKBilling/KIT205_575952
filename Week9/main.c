@@ -41,14 +41,95 @@ int* get_in_degrees(Graph* self) {
 	return in_degrees;
 }
 
+// Retrieves the out degrees of each vertex in a graph. Returns an array of ints with the index of each int corresponding
+// to the vertex number. The ints stored within the array represent the out degrees of the vertex with the corresponding 
+// index number.
+int* get_out_degrees(Graph* self) {
+	int* out_degrees;	  // The out degrees of each vertex
+	EdgeNodePtr current;  // The node currently being iterated over
+
+	// Initialise array of in-degrees
+	out_degrees = malloc((sizeof * out_degrees) * self->V);
+
+	for (int i = 0; i < self->V; i++)
+	{
+		out_degrees[i] = 0;
+		current = self->edges[i].head;
+		while (current != NULL) {
+			out_degrees[i]++;
+			current = current->next;
+		}
+	}
+
+	return out_degrees;
+}
+
+// Gets the PageRanks of each vertex in a given graph. Iterates over the algorithm a given number of times and returns
+// the results as an array of floats where each index of the array corresponds to a vertex number.
+float* get_pageranks(Graph* self, int iterations) {
+	const float DAMPENING_FACTOR = 0.5; // The dampening factor of the PageRank function
+
+	float* sums;  // Array of sums
+	int* L;		  // Array of out degrees
+	float* PR;	  // Array of page ranks
+	EdgeNodePtr current; // The currently iterated node
+
+	sums = malloc((sizeof * sums) * self->V);
+	PR = malloc((sizeof * PR) * self->V);
+
+	L = get_out_degrees(self);
+
+	// Initialise PageRanks to 1
+	for (int i = 0; i < self->V; i++)
+	{
+		PR[i] = 1;
+	}
+
+	for (int iteration = 0; iteration < iterations; iteration++) {
+		// 1. Loop through all vertices and set sums to 0
+		for (int i = 0; i < self->V; i++)
+		{
+			sums[i] = 0;
+		}
+
+		// 2. Loop through all edges adding the sigma bit to vertex i where i is the to vertex and j is the from vertex
+		for (int i = 0; i < self->V; i++) {
+			for (int j = 0; j < self->V; j++)
+			{
+				current = self->edges[j].head;
+				while (current != NULL) {
+					if (current->edge.to_vertex == i) {
+						sums[i] += PR[j] / L[j];
+					}
+					current = current->next;
+				}
+			}
+		}
+
+		// 3. Loop through all vertices and calculate the new PageRanks by applying the dampening factor
+		for (int i = 0; i < self->V; i++) {
+			//printf("sum %d: %f\n", i, sums[i]);
+			PR[i] = (1 - DAMPENING_FACTOR) + DAMPENING_FACTOR * sums[i];
+		}
+	}
+	
+	return PR;
+}
+
 // Tests all functions (aside from main) in this file
 void test_graph() {
-	Graph testing_graph; // The graph used for testing this file
+	const float PAGE_RANK_RESULTS[] = { 0.675564, 0.5, 0.578776, 1.459201, 0.972222, 0.625434, 0.748264 }; // Page rank results
+	//	gotten from executing the PageRank algorithm on the testing file graph in Excel, in the same way demonstrated in the week 10 tutorial
+
+	Graph testing_graph;	  // The graph used for testing this file
 	FILE* file = fopen("testgraph.txt", "r"); // The file contianing the test graph
 	int* in_degrees;	   // The in-degree values calculated by the get_in_degrees function
+	int* out_degrees;	   // The out-degree values calculated by the get_out_degrees function
 	int* true_in_degrees;  // The actual in-degree values for the testing graph
+	int* true_out_degrees; // The actual out-degree values for the testing graph
 	EdgeNodePtr current;   // The node currently being iterated over
 	int from, to, weight;  // From, to, and weight values extracted from file
+	float* page_ranks;	   // The page ranks of the week 10 testing graph
 
 	if (file == NULL) {
 		printf("Error opening file!\n");
@@ -115,17 +196,77 @@ void test_graph() {
 		printf("%d\n", in_degrees[i]);
 	}
 
+	// ----------------------------------------------------------------------------------------------------------------
+	// 3 - Test get_out_degrees()
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n3. get_out_degrees() test\n----------------\n");
+
+	// 3.1 - Test finding the out degrees of each vertex 
+
+	// Configure the true out-degrees
+	true_out_degrees = malloc((sizeof * true_out_degrees) * testing_graph.V);
+	for (int i = 0; i < testing_graph.V; i++)
+	{
+		true_out_degrees[i] = 0;
+	}
+
+	rewind(file);
+	// Skip vertex line
+	fscanf_s(file, "%d", &testing_graph.V);
+
+	// Set true out-degrees
+	while (fscanf_s(file, "%d,%d,%d", &from, &to, &weight) == 3) {
+		true_out_degrees[from] = true_out_degrees[from] + 1;
+	}
+
+	out_degrees = get_out_degrees(&testing_graph);
+
+	printf("3.1 - Expected Result:\n");
+	for (int i = 0; i < testing_graph.V; i++)
+	{
+		printf("%d\n", true_out_degrees[i]);
+	}
+	printf("3.1 - Actual result:\n");
+	for (int i = 0; i < testing_graph.V; i++)
+	{
+		printf("%d\n", out_degrees[i]);
+
+	}
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 4 - Test get_pageranks()
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("\n----------------\n4. get_pageranks() test\n----------------\n");
+	
+	// 4.1 - Test finding the pageranks of all vertices in a graph. This graph has a vertex with no in degrees (vertex 1) so this
+	//		 tests the case when a vertex has no in degrees. 
+	page_ranks = get_pageranks(&testing_graph, 4);
+
+	printf("4.1 - Expected Result:\n");
+	for (int i = 0; i < testing_graph.V; i++)
+	{
+		printf("%f\n", PAGE_RANK_RESULTS[i]);
+	}
+	printf("4.1 - Actual result:\n");
+	for (int i = 0; i < testing_graph.V; i++)
+	{
+		printf("%f\n", page_ranks[i]);
+
+	}
 }
 
 int main() {
 	Graph G;
 	//FILE* file = fopen("graph.txt", "r");  (The original graph.txt file)
-	FILE* file = fopen("large_graph.txt", "r");
+	//FILE* file = fopen("testgraph.txt", "r");
+	FILE* file = fopen("week10_test_graph.txt", "r");
 	int from;
 	int to;
 	int weight;
 	int* in_degrees;
+	int* out_degrees;
 	EdgeNodePtr current;
+	float* page_ranks;
 
 	// Stop function if file is not valid
 	if (file == NULL) {
@@ -143,14 +284,17 @@ int main() {
 	}
 
 	// Add all edges from file
-	//while (fscanf_s(file, "%d,%d,%d", &from, &to, &weight) == 3) { (For the inital graph.txt file that included edges)
+	//while (fscanf_s(file, "%d,%d,%d", &from, &to, &weight) == 3) { //(For the inital graph.txt file that included edges)
 	while (fscanf_s(file, "%d,%d", &from, &to) == 2) {
 		add_edge(&G, from, to, 0);
 	}
 
-	in_degrees = get_in_degrees(&G);
+	page_ranks = get_pageranks(&G, 5);
 
-	printf("In degrees of vertex 5567: %d\n", in_degrees[5567]);
+	for (int i = 0; i < G.V; i++)
+	{
+		printf("%f\n", page_ranks[i]);
+	}
 	fclose(file);
 
 	test_graph();

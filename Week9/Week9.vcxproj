@@ -139,6 +139,7 @@
     <Text Include="large_graph.txt" />
     <Text Include="testgraph.txt" />
     <Text Include="test_file.txt" />
+    <Text Include="week10_test_graph.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

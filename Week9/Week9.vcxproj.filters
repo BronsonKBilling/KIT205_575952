@@ -31,5 +31,6 @@
     <Text Include="large_graph.txt" />
     <Text Include="test_file.txt" />
     <Text Include="testgraph.txt" />
+    <Text Include="week10_test_graph.txt" />
   </ItemGroup>
 </Project>
