@@ -127,11 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="graph.c" />
+    <ClCompile Include="network.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="graph.h" />
+    <ClInclude Include="network.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="test_graph.txt" />

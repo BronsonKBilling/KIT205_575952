@@ -1,4 +1,4 @@
 int main() {
-	test_graph();
+	test_network();
 	return 0;
 }
