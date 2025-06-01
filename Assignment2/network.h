@@ -90,6 +90,14 @@ void add_link(Network* self, int first_device, int second_device, int speed);
 Network* build_network_from_file(String filepath);
 
 /**
+ * @brief Builds a routing table for each device in the network using the specified algorithm
+ *
+ * @param self The network to build the routing tables of
+ * @param algorithm The algorithm to use, 0 for Dijkstra, 1 for Bellman-Ford
+ */
+void build_routing_tables(Network* self, int algorithm);
+
+/**
  * @brief Tests all of the functions within this file
  */
 void test_network();

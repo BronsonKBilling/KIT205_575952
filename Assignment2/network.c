@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "network.h"
+#include <stdbool.h>
 
 // Adds a new link to a network. Assumes that the network has both the to and from nodes within it
 void add_link(Network* self, int first_device, int second_device, int speed) {
@@ -53,19 +55,131 @@ Network* build_network_from_file(String filepath) {
 	return new_network;
 }
 
-// Creates a routing table for each node in the network
-void build_routing_tables(Network* self) {
+bool all_devices_known(int* known_array, int length) {
+	bool all_known = true;
 
+	for (int i = 0; i < length; i++)
+	{
+		if (!known_array[i]) {
+			all_known = false;
+		}
+	}
+
+	return all_known;
+}
+
+// Creates a routing table for each node in the network using Dijkstra's shortest path algorithm
+void find_shortest_paths_dijkstra(Network* self, int device_index) {
+	int* distances = malloc((sizeof(int)) * self->vertices); // An array of distances
+	int* known = malloc((sizeof(bool)) * self->vertices); // An array of visitations
+	int* previous = malloc((sizeof(int)) * self->vertices); // An array storing the previous hop of each device
+	int current_device; // The currently assessed device
+	LinkNodePtr current_link;
+
+	// Initialise distances
+	for (int i = 0; i < self->vertices; i++)
+	{	
+		distances[i] = INT_MAX; // Closest we can get to infinity with an INT
+		previous[i] = -1;
+		known[i] = false;
+	}
+
+	distances[device_index] = 0;
+
+	while (!all_devices_known(known, self->vertices)) {
+		current_device = -1; // Reset current device
+
+		// Find device with shortest distance that is still unknown and make it the current_device
+		for (int i = 0; i < self->vertices; i++)
+		{
+			// Condition makes it so that if two unknown devices have the same distance, the one that comes first in the
+			// array is assessed first
+			if (!known[i] && (current_device == -1 || distances[i] < distances[current_device])) {
+				current_device = i;
+				
+			}
+		}
+
+		current_link = self->devices[current_device].links.head;
+
+		// Traverse linked devices and overwrite paths if needed
+		while (current_link != NULL) {
+			if (
+				!known[current_link->link.to_device] && 
+				distances[current_device] + current_link->link.speed < distances[current_link->link.to_device]
+			) {
+				distances[current_link->link.to_device] = distances[current_device] + current_link->link.speed;
+				previous[current_link->link.to_device] = current_device;
+			}
+
+			current_link = current_link->next;
+		}
+
+		known[current_device] = true;
+	}
+
+	// Build routing table from previous[]
+	for (int i = 0; i < self->vertices; i++) {
+		if (i == device_index) {
+			continue;
+		}
+
+		current_device = i;
+
+		while (current_device != -1 && previous[current_device] != device_index) {
+			// If there is no valid path
+			if (previous[current_device] == -1) {
+				current_device = -1;
+			}
+			else {
+				current_device = previous[current_device];
+			}
+			
+		}
+
+		if (current_device != -1) {
+			self->devices[device_index].routes[i].next_hop = current_device;
+			self->devices[device_index].routes[i].cost = distances[i];
+		}
+	}
+
+	// Free dynamically allocated memory
+	free(distances);
+	free(known);
+	free(previous);
+}
+
+// Creates a routing table for each node in the network using the Bellman-Ford shortest path algorithm
+//void find_shortest_paths_bellman_ford(Network* self, int device_index) {
+//
+//}
+
+// Builds a routing table for each node in the network using a specified algorithm. 0 is for Dijkstra and 1 is for Bellman-Ford
+void build_routing_tables(Network* self, int algorithm) {
+	for (int i = 0; i < self->vertices; i++)
+	{
+		if (algorithm == 0) { // 0 = Dijkstra
+			find_shortest_paths_dijkstra(self, i);
+		}
+		else if (algorithm == 1) { // 1 = Bellman-Ford
+			find_shortest_paths_bellman_ford(self, i);
+		} 
+		else {
+			printf("Error: Algorithm is not supported!");
+		}
+	}
 }
 
 
 // Tests all functions in this file
 void test_network() {
+	const int KNOWN_ARRAY_SIZE = 10; // The size of the 'known' array
+
 	String test_file_path = "test_graph.txt"; // The path of the file containing the test network
 	FILE* file = fopen(test_file_path, "r");  // The file containing the test network
 	Network* testing_network;	// The network used for testing this file
 	Network empty_network;		// An initially empty network
-
+	int* known = malloc((sizeof(bool)) * KNOWN_ARRAY_SIZE); // An array of visitations
 	LinkNodePtr current_link_node; // The link node currently being iterated over
 
 	// Testing network values
@@ -128,4 +242,6 @@ void test_network() {
 	}
 	printf("end of network\n");
 
+
 }
+

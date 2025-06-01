@@ -29,5 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="test_graph.txt" />
+    <Text Include="test_graph_routing_table.txt" />
   </ItemGroup>
 </Project>
