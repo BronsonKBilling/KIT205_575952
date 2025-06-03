@@ -1,4 +1,3 @@
-first_device,second_device,next_hop,cost
 0,1,3,6
 0,2,3,2
 0,3,3,1
