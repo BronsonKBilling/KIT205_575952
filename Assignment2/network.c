@@ -79,6 +79,39 @@ bool all_devices_known(bool* known_array, int length) {
 	return all_known;
 }
 
+void build_routing_table_from_distances(Network* self, int* previous, int* distances, int device_index) {
+	int current_device; // The currently assessed device
+
+	for (int i = 0; i < self->vertices; i++) {
+		if (i == device_index) {
+			continue;
+		}
+
+		current_device = i;
+		
+		// Backtrack to just before the parameter device. -1 check is necessary to see if device is unreachable
+		while (current_device != -1 && previous[current_device] != device_index) {
+			// If there is no valid path
+			if (previous[current_device] == -1) {
+				current_device = -1;
+			}
+			else {
+				current_device = previous[current_device];
+			}
+		}
+
+		// If device can be reached
+		if (current_device != -1) {
+			self->devices[device_index].routes[i].next_hop = current_device;
+			self->devices[device_index].routes[i].cost = distances[i];
+		}
+		else {
+			self->devices[device_index].routes[i].next_hop = -1;
+			self->devices[device_index].routes[i].cost = -1;
+		}
+	}
+}
+
 // Creates a routing table for each node in the network using Dijkstra's shortest path algorithm
 // Assumes that the graph has no negative weights and that it has more than 1 vertex
 // Some errors were found and troubleshooted with help from ChatGPT for this function
@@ -130,36 +163,7 @@ void find_shortest_paths_dijkstra(Network* self, int device_index) {
 		known[current_device] = true;
 	}
 
-	// Build routing table from previous[]
-	for (int i = 0; i < self->vertices; i++) {
-		if (i == device_index) {
-			continue;
-		}
-
-		current_device = i;
-
-		// Backtrack to just before the parameter device. -1 check is necessary to see if device is unreachable
-		while (current_device != -1 && previous[current_device] != device_index) {
-			// If there is no valid path
-			if (previous[current_device] == -1) {
-				current_device = -1;
-			}
-			else {
-				current_device = previous[current_device];
-			}
-			
-		}
-
-		// If device can be reached
-		if (current_device != -1) {
-			self->devices[device_index].routes[i].next_hop = current_device;
-			self->devices[device_index].routes[i].cost = distances[i];
-		}
-		else {
-			self->devices[device_index].routes[i].next_hop = -1;
-			self->devices[device_index].routes[i].cost = -1;
-		}
-	}
+	build_routing_table_from_distances(self, previous, distances, device_index);
 
 	// Free dynamically allocated memory
 	free(distances);
@@ -168,8 +172,87 @@ void find_shortest_paths_dijkstra(Network* self, int device_index) {
 }
 
 // Creates a routing table for each node in the network using the Bellman-Ford shortest path algorithm
+// ChatGPT gave basic pseudocode to explain how Bellman-Ford works and was used for debugging.
 void find_shortest_paths_bellman_ford(Network* self, int device_index) {
+	typedef struct bellmanFordLinkListNode { // A link (edge) in the edge list
+		int to_device;
+		int from_device;
+		int speed;
+		struct bellmanFordLinkListNode* next;
+	} *BellmanFordLinkListPtr;
 
+	int* distances = malloc((sizeof(int)) * self->vertices); // An array of distances
+	int* previous = malloc((sizeof(int)) * self->vertices); // An array storing the previous hop of each device
+	LinkNodePtr link_to_add; // The link to add to the link list
+	BellmanFordLinkListPtr current_link = NULL; // The link that was most recently created
+	BellmanFordLinkListPtr first_link = malloc(sizeof * first_link); // The first link in the edge/link list
+	BellmanFordLinkListPtr new_node; // A new node to add to the list
+	
+	// Initialise distances
+	for (int i = 0; i < self->vertices; i++)
+	{
+		distances[i] = INT_MAX;
+		previous[i] = -1;
+	}
+
+	// Build list of edges
+	for (int i = 0; i < self->vertices; i++) 
+	{
+		// Check if device has any links
+		if (self->devices[i].links.head != NULL) {
+			link_to_add = self->devices[i].links.head;
+		} 
+		else {
+			link_to_add = NULL;
+		}
+
+		while (link_to_add != NULL) {
+			// Create the new node
+			new_node = malloc(sizeof * new_node);
+			new_node->from_device = i;
+			new_node->to_device = link_to_add->link.to_device;
+			new_node->speed = link_to_add->link.speed;
+			new_node->next = NULL;
+
+			// If the first link has not been used
+			if (current_link == NULL) {
+				first_link = new_node;
+				current_link = first_link;
+			}
+			else {
+				current_link->next = new_node;
+				current_link = current_link->next;
+			}
+
+			link_to_add = link_to_add->next;
+		}
+	}
+
+	distances[device_index] = 0;
+
+	for (int i = 0; i < self->vertices - 1; i++)
+	{
+		current_link = first_link;
+		while (current_link != NULL) {
+			if (
+				distances[current_link->from_device] != INT_MAX && 
+				distances[current_link->from_device] + current_link->speed < distances[current_link->to_device]
+			) {
+				distances[current_link->to_device] = distances[current_link->from_device] + current_link->speed;
+				previous[current_link->to_device] = current_link->from_device;
+			}
+
+			current_link = current_link->next;
+		}
+	}
+
+	for (int i = 0; i < self->vertices; i++)
+	{
+		printf("Previous for %d: %d\n", i, previous[i]);
+		printf("Distance for %d: %d\n", i, distances[i]);
+	}
+
+	build_routing_table_from_distances(self, previous, distances, device_index);
 }
 
 // Builds a routing table for each node in the network using a specified algorithm. 0 is for Dijkstra and 1 is for Bellman-Ford
@@ -424,6 +507,31 @@ void test_network() {
 			cost = empty_network.devices[i].routes[j].cost;
 			printf("From device %d to device %d with a cost of %d and a next hop of %d\n", i, j, cost, next_hop);
 		}
+	}
+
+
+
+	add_link(testing_network, 0, 3, 1);
+	
+	find_shortest_paths_bellman_ford(testing_network, 1);
+	printf("5.1 - Expected Result:\n");
+	// Starts at 1 because the routing table file does not have an entry for a device to itself
+	for (int i = 0; i < testing_network->vertices; i++)
+	{
+		if (i != 1) {
+			fscanf_s(routing_table_file, "%d,%d,%d,%d", &first_device, &second_device, &next_hop, &cost);
+			printf("From: %d, To: %d", first_device, second_device);
+			printf("From device 1 to device %d with a speed of %d and a next hop of %d\n", i, cost, next_hop);
+		}
+		
+	}
+
+	printf("5.1 - Actual Result:\n");
+	for (int i = 0; i < testing_network->vertices; i++)
+	{
+		next_hop = testing_network->devices[1].routes[i].next_hop;
+		cost = testing_network->devices[1].routes[i].cost;
+		printf("From device 1 to device %d with a cost of %d and a next hop of %d\n", i, cost, next_hop);
 	}
 
 
