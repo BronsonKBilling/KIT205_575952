@@ -185,7 +185,8 @@ void find_shortest_paths_bellman_ford(Network* self, int device_index) {
 	int* previous = malloc((sizeof(int)) * self->vertices); // An array storing the previous hop of each device
 	LinkNodePtr link_to_add; // The link to add to the link list
 	BellmanFordLinkListPtr current_link = NULL; // The link that was most recently created
-	BellmanFordLinkListPtr first_link = malloc(sizeof * first_link); // The first link in the edge/link list
+	BellmanFordLinkListPtr first_link = NULL; // The first link in the edge/link list
+	BellmanFordLinkListPtr previous_link = NULL; // The link that was assessed previously
 	BellmanFordLinkListPtr new_node; // A new node to add to the list
 	
 	// Initialise distances
@@ -230,6 +231,7 @@ void find_shortest_paths_bellman_ford(Network* self, int device_index) {
 
 	distances[device_index] = 0;
 
+	// Run relaxations
 	for (int i = 0; i < self->vertices - 1; i++)
 	{
 		current_link = first_link;
@@ -246,13 +248,24 @@ void find_shortest_paths_bellman_ford(Network* self, int device_index) {
 		}
 	}
 
-	for (int i = 0; i < self->vertices; i++)
-	{
-		printf("Previous for %d: %d\n", i, previous[i]);
-		printf("Distance for %d: %d\n", i, distances[i]);
+	// Make unreachable distances equal -1
+	for (int i = 0; i < self->vertices; i++) {
+		if (distances[i] == INT_MAX) {
+			distances[i] = -1;
+		}
 	}
 
 	build_routing_table_from_distances(self, previous, distances, device_index);
+
+	// Free memory
+	current_link = first_link;
+	while (current_link != NULL) {
+		previous_link = current_link;
+		current_link = current_link->next;
+		free(previous_link);
+	}
+	free(distances);
+	free(previous);
 }
 
 // Builds a routing table for each node in the network using a specified algorithm. 0 is for Dijkstra and 1 is for Bellman-Ford
@@ -268,6 +281,40 @@ void build_routing_tables(Network* self, int algorithm) {
 		else {
 			printf("Error: Algorithm is not supported!");
 		}
+	}
+}
+
+// Prints the routing table for a single device, or the routing table for all devices in the network if device_table_to_print = -1
+void print_routes(Network* self, int device_table_to_print) {
+	int next_hop; // The next hop for the device to print the table of to get to the currently iterated device
+	int cost; // The cost to get from the currently iterated device to the device with the table to print
+
+	if (device_table_to_print == -1) {
+		for (int i = 0; i < self->vertices; i++)
+		{
+			print_routes(self, i);
+		}
+	}
+	else {
+		for (int i = 0; i < self->vertices; i++)
+		{
+			next_hop = self->devices[device_table_to_print].routes[i].next_hop;
+			cost = self->devices[device_table_to_print].routes[i].cost;
+			printf("From device %d to device %d with a cost of %d and a next hop of %d\n", device_table_to_print, i, cost, next_hop);
+		}
+	}
+}
+
+void print_routes_from_test_file(FILE* table_file, int network_devices) {
+	int first_device;   // The first device in the route
+	int second_device;  // The second device in the route
+	int cost;		    // The cost of the route
+	int next_hop;		// The next hop of the route
+
+	for (int i = 0; i < network_devices; i++)
+	{
+		fscanf_s(table_file, "%d,%d,%d,%d", &first_device, &second_device, &next_hop, &cost);
+		printf("From device %d to device %d with a cost of %d and a next hop of %d\n", first_device, second_device, cost, next_hop);
 	}
 }
 
@@ -295,6 +342,11 @@ void test_network() {
 	int next_hop;
 	int cost;
 	String file_header;
+
+	// build_routing_table_from_distances testing variables
+	Network* distance_table_network;
+	int* distances;
+	int* previous;
 
 
 
@@ -393,37 +445,72 @@ void test_network() {
 	printf("%s\n", all_devices_known(known, KNOWN_ARRAY_SIZE) ? "true" : "false");
 
 	// ----------------------------------------------------------------------------------------------------------------
-	// 4 - Test find_shortest_paths_dijkstra()
+	// 4 - Test build_routing_table_from_distances()
 	// ----------------------------------------------------------------------------------------------------------------
-	printf("----------------\n4. find_shortest_paths_dijkstra() test\n----------------\n");
+	printf("----------------\n4. build_routing_table_from_distances() test\n----------------\n");
+
+	// 4.1 - Test whether the function can generate a routing table for the network when there are no unreachable nodes.
+	//		 This tests all loops, the first else statement and the second if statement within the inner while loop. 
+	distance_table_network = build_network_from_file(TEST_FILE_PATH);
+	distances = malloc((sizeof(int)) * distance_table_network->vertices);
+	previous = malloc((sizeof(int)) * distance_table_network->vertices);
+
+	// Build distances from 0 to other devices and the previous hops of each device
+	distances[0] = -1;
+	previous[0] = -1;
+	distances[1] = 6;
+	previous[1] = 2;
+	distances[2] = 2;
+	previous[2] = 3;
+	distances[3] = 1;
+	previous[3] = 0;
+	distances[4] = 4;
+	previous[4] = 2;
+
+	build_routing_table_from_distances(distance_table_network, previous, distances, 0);
+
+	printf("4.1 - Expected Result:\n");
+	print_routes_from_test_file(routing_table_file, distance_table_network->vertices);
+
+	printf("4.1 - Actual Result:\n");
+	print_routes(distance_table_network, 0);
+
+	// 4.2 - Test whether the function can generate a routing table for the network when there are unreachable nodes.
+	//		 This tests all loops, the first if statement and the second else statement within the inner while loop. 
+
+	// Remove link from 1 to 2, making it unreachable
+	distances[1] = -1;
+	previous[1] = -1;
+
+	build_routing_table_from_distances(distance_table_network, previous, distances, 0);
+
+	printf("4.2 - Expected Result:\n");
+	printf("From device 0 to device 1 with a cost of -1 and a next hop of -1");
+
+	printf("\n4.2 - Actual Result:\n");
+	printf("From device 0 to device 1 with a cost of %d and a next hop of %d\n", testing_network->devices[0].routes[1].cost, testing_network->devices[0].routes[1].next_hop);
+
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 5 - Test find_shortest_paths_dijkstra()
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n5. find_shortest_paths_dijkstra() test\n----------------\n");
 	// Note: functionality tests for this function were suggested by ChatGPT. Implementation and code path related tests
 	//		 were not done by ChatGPT
 
-	// 4.1 - Test whether the function can correctly create a routing table from a network. The testing graph is basic and
+	// 5.1 - Test whether the function can correctly create a routing table from a network. The testing graph is basic and
 	//       does not have multiple paths to the same device. It also does not have any unreachable nodes. This tests all
 	//       loops in the function and all 'if' statements aside from the one that checks for invalid paths within the final
 	//		 while statement.
-	find_shortest_paths_dijkstra(testing_network, 0);
+	find_shortest_paths_dijkstra(testing_network, 1);
 
-	printf("4.1 - Expected Result:\n");
-	printf("From device 0 to device 0 with a speed of -1 and a next hop of -1\n");
+	printf("5.1 - Expected Result:\n");
+	print_routes_from_test_file(routing_table_file, testing_network->vertices);
 
-	// Starts at 1 because the routing table file does not have an entry for a device to itself
-	for (int i = 1; i < testing_network->vertices; i++) 
-	{
-		fscanf_s(routing_table_file, "%d,%d,%d,%d", &first_device, &second_device, &next_hop, &cost);
-		printf("From device 0 to device %d with a speed of %d and a next hop of %d\n", i, cost, next_hop);
-	}
+	printf("5.1 - Actual Result:\n");
+	print_routes(testing_network, 1);
 
-	printf("4.1 - Actual Result:\n");
-	for (int i = 0; i < testing_network->vertices; i++)
-	{
-		next_hop = testing_network->devices[0].routes[i].next_hop;
-		cost = testing_network->devices[0].routes[i].cost;
-		printf("From device 0 to device %d with a cost of %d and a next hop of %d\n", i, cost, next_hop);
-	}
-
-	// 4.2 - Test when the graph has an unreachable node. This triggers the if statement within the final while statement 
+	// 5.2 - Test when the graph has an unreachable node. This triggers the if statement within the final while statement 
 	//       that checks if the device has no path to it. Also triggers the final else statement within the final while statement.
 	//       This test and the test above together execute all code paths
 	free(testing_network->devices[0].links.head);
@@ -436,11 +523,11 @@ void test_network() {
 	find_shortest_paths_dijkstra(testing_network, 0);
 	find_shortest_paths_dijkstra(testing_network, 3);
 
-	printf("4.2 - Expected Result:\n");
-	printf("From device 0 to device 3 with a speed of -1 and a next hop of -1\n");
-	printf("From device 3 to device 0 with a speed of -1 and a next hop of -1\n");
+	printf("5.2 - Expected Result:\n");
+	printf("From device 0 to device 3 with a cost of -1 and a next hop of -1\n");
+	printf("From device 3 to device 0 with a cost of -1 and a next hop of -1\n");
 
-	printf("4.2 - Actual Result:\n");
+	printf("5.2 - Actual Result:\n");
 	printf(
 		"From device 0 to device 3 with a cost of %d and a next hop of %d\n",
 		testing_network->devices[0].routes[3].cost,
@@ -452,21 +539,21 @@ void test_network() {
 		testing_network->devices[3].routes[0].next_hop
 	);
 
-	// 4.3 - Test when two paths exist to the same device. The algorithm should choose the shortest path.
+	// 5.3 - Test when two paths exist to the same device. The algorithm should choose the shortest path.
 	//		 1 has a link with 2 with a speed of 4, 2 has a link to 4 with a speed of 2.
 	add_link(testing_network, 1, 4, 8);
 
 	find_shortest_paths_dijkstra(testing_network, 1);
 
 	// 1->4 directly costs 8, 1->2->4 costs 6
-	printf("4.3 - Expected Result: From device 1 to device 4 with a cost of 6 and a next hop of 2\n");
+	printf("5.3 - Expected Result: From device 1 to device 4 with a cost of 6 and a next hop of 2\n");
 	printf(
-		"4.3 - Actual Result: From device 1 to device 4 with a cost of %d and a next hop of %d\n",
+		"5.3 - Actual Result: From device 1 to device 4 with a cost of %d and a next hop of %d\n",
 		testing_network->devices[1].routes[4].cost,
 		testing_network->devices[1].routes[4].next_hop
 	);
 
-	// 4.4 - Test when the network has a cycle in it with each link/edge in the cycle having the same weight. A cycle 
+	// 5.4 - Test when the network has a cycle in it with each link/edge in the cycle having the same weight. A cycle 
 	//		 should not break Dijkstra's algorithm as it can handle them and it should not cause in infinite loop in 
 	//       the code.
 	empty_network.devices[2].links.head = NULL;
@@ -483,57 +570,122 @@ void test_network() {
 	}
 
 	add_link(&empty_network, 0, 2, 2);
+	add_link(&empty_network, 1, 2, 2);
 	find_shortest_paths_dijkstra(&empty_network, 0);
 	find_shortest_paths_dijkstra(&empty_network, 1);
 	find_shortest_paths_dijkstra(&empty_network, 2);
 
-	printf("4.3 - Expected Result:\n");
-	printf("From device 0 to device 0 with a cost of - 1 and a next hop of - 1\n");
-	printf("From device 0 to device 1 with a cost of 2 and a next hop of 1\n");
-	printf("From device 0 to device 2 with a cost of 2 and a next hop of 2\n");
-	printf("From device 1 to device 0 with a cost of 2 and a next hop of 0\n");
-	printf("From device 1 to device 1 with a cost of - 1 and a next hop of - 1\n");
-	printf("From device 1 to device 2 with a cost of 4 and a next hop of 0\n");
-	printf("From device 2 to device 0 with a cost of 2 and a next hop of 0\n");
-	printf("From device 2 to device 1 with a cost of 4 and a next hop of 0\n");
-	printf("From device 2 to device 2 with a cost of - 1 and a next hop of - 1\n");
-
-	printf("4.3 - Actual Result:\n");
+	printf("5.4 - Expected Result:\n");
 	for (int i = 0; i < empty_network.vertices; i++)
 	{
 		for (int j = 0; j < empty_network.vertices; j++)
 		{
-			next_hop = empty_network.devices[i].routes[j].next_hop;
-			cost = empty_network.devices[i].routes[j].cost;
+			// Since each link has a direct path to each node, the next hop should always just be the destination node
+			if (i == j) {
+				cost = -1;
+				next_hop = -1;
+			}
+			else {
+				cost = 2;
+				next_hop = j;
+			}
+			printf("From device %d to device %d with a cost of %d and a next hop of %d\n", i, j, cost, next_hop);	
+		}
+	}
+
+	printf("5.4 - Actual Result:\n");
+	print_routes(&empty_network, -1);
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// 6 - Test find_shortest_paths_bellman_ford()
+	// ----------------------------------------------------------------------------------------------------------------
+	printf("----------------\n6. find_shortest_paths_bellman_ford() test\n----------------\n");
+
+	// 6.1 - Test whether the function can correctly create a routing table from a network. The testing graph is basic and
+	//       does not have multiple paths to the same device. It also does not have any unreachable nodes. This tests all
+	//       loops in the function and all if and else statements aside from the first else statement in the function
+
+	add_link(testing_network, 0, 3, 1);
+	
+	find_shortest_paths_bellman_ford(testing_network, 2);
+	printf("6.1 - Expected Result:\n");
+	// Starts at 1 because the routing table file does not have an entry for a device to itself
+	print_routes_from_test_file(routing_table_file, testing_network->vertices);
+
+	printf("6.1 - Actual Result:\n");
+	print_routes(testing_network, 2);
+
+	// 6.2 - Test when the graph has an unreachable node. This triggers the first else statment of the function. 
+	//		  This test and the test above together execute all code paths
+
+	free(testing_network->devices[0].links.head);
+	testing_network->devices[0].links.head = NULL;
+
+	// first link node is 3's connection to 0, this is different to last time as this connection was added most recently
+	free(testing_network->devices[3].links.head);
+	testing_network->devices[3].links.head = NULL;
+
+	find_shortest_paths_bellman_ford(testing_network, 0);
+	find_shortest_paths_bellman_ford(testing_network, 3);
+
+	printf("6.2 - Expected Result:\n");
+	printf("From device 0 to device 3 with a cost of -1 and a next hop of -1\n");
+	printf("From device 3 to device 0 with a cost of -1 and a next hop of -1\n");
+
+	printf("6.2 - Actual Result:\n");
+	printf(
+		"From device 0 to device 3 with a cost of %d and a next hop of %d\n",
+		testing_network->devices[0].routes[3].cost,
+		testing_network->devices[0].routes[3].next_hop
+	);
+	printf(
+		"From device 3 to device 0 with a cost of %d and a next hop of %d\n",
+		testing_network->devices[3].routes[0].cost,
+		testing_network->devices[3].routes[0].next_hop
+	);
+
+	// 6.3 - Test when two paths exist to the same device. The algorithm should choose the shortest path.
+	//		 1 has a link with 2 with a speed of 4, 2 has a link to 4 with a speed of 2. in 5.3, 1 was given a
+	//		 direct link to 4 with a cost of 8. The algorithm should choose the path of 1->2->4 instead of 1->4
+
+	find_shortest_paths_bellman_ford(testing_network, 1);
+
+	printf("6.3 - Expected Result: From device 1 to device 4 with a cost of 6 and a next hop of 2\n");
+	printf(
+		"6.3 - Actual Result: From device 1 to device 4 with a cost of %d and a next hop of %d\n",
+		testing_network->devices[1].routes[4].cost,
+		testing_network->devices[1].routes[4].next_hop
+	);
+
+	// 6.4 - Test when the network has a cycle in it with each link/edge in the cycle having the same weight. A cycle 
+	//		 should not break the algorithm as it can handle them and it should not cause in infinite loop in 
+	//       the code.
+
+	// Empty network gained a cycle in 5.4
+
+	find_shortest_paths_bellman_ford(&empty_network, 0);
+	find_shortest_paths_bellman_ford(&empty_network, 1);
+	find_shortest_paths_bellman_ford(&empty_network, 2);
+
+	printf("6.4 - Expected Result:\n");
+	for (int i = 0; i < empty_network.vertices; i++)
+	{
+		for (int j = 0; j < empty_network.vertices; j++)
+		{
+			// Since each link has a direct path to each node, the next hop should always just be the destination node
+			if (i == j) {
+				cost = -1;
+				next_hop = -1;
+			}
+			else {
+				cost = 2;
+				next_hop = j;
+			}
 			printf("From device %d to device %d with a cost of %d and a next hop of %d\n", i, j, cost, next_hop);
 		}
 	}
 
-
-
-	add_link(testing_network, 0, 3, 1);
-	
-	find_shortest_paths_bellman_ford(testing_network, 1);
-	printf("5.1 - Expected Result:\n");
-	// Starts at 1 because the routing table file does not have an entry for a device to itself
-	for (int i = 0; i < testing_network->vertices; i++)
-	{
-		if (i != 1) {
-			fscanf_s(routing_table_file, "%d,%d,%d,%d", &first_device, &second_device, &next_hop, &cost);
-			printf("From: %d, To: %d", first_device, second_device);
-			printf("From device 1 to device %d with a speed of %d and a next hop of %d\n", i, cost, next_hop);
-		}
-		
-	}
-
-	printf("5.1 - Actual Result:\n");
-	for (int i = 0; i < testing_network->vertices; i++)
-	{
-		next_hop = testing_network->devices[1].routes[i].next_hop;
-		cost = testing_network->devices[1].routes[i].cost;
-		printf("From device 1 to device %d with a cost of %d and a next hop of %d\n", i, cost, next_hop);
-	}
-
-
+	printf("6.4 - Actual Result:\n");
+	print_routes(&empty_network, -1);
 }
 
