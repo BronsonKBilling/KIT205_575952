@@ -98,6 +98,13 @@ Network* build_network_from_file(String filepath);
 void build_routing_tables(Network* self, int algorithm);
 
 /**
+ * @brief Compares two algorithms for time taken to build a full routing table for each device in the network
+ *
+ * @param The filename of the file storing information about the network to base the comparison on
+ */
+void compare_algorithms(String file_name);
+
+/**
  * @brief Tests all of the functions within this file
  */
 void test_network();

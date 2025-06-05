@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Comparison Networks">
+      <UniqueIdentifier>{c52e448b-d1a3-4105-8d40-118db4567656}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -30,5 +33,8 @@
   <ItemGroup>
     <Text Include="test_graph.txt" />
     <Text Include="test_graph_routing_table.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assignment1\network_maker.py" />
   </ItemGroup>
 </Project>

@@ -137,6 +137,9 @@
     <Text Include="test_graph_routing_table.txt" />
     <Text Include="test_graph.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assignment1\network_maker.py" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
